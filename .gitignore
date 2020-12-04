@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+.vs/
+_ReSharper.Caches/
+Binaries/
+Intermediate/
+Saved/
+SG.sln
