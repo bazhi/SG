@@ -178,9 +178,9 @@ public:
     UPROPERTY(EditDefaultsOnly)
     float SprintSpeed = 0;
     UPROPERTY(EditDefaultsOnly)
-    UCurveVector* MovementCurve = nullptr;
+    class UCurveVector* MovementCurve = nullptr;
     UPROPERTY(EditDefaultsOnly)
-    UCurveFloat* RotationRateCurve = nullptr;
+    class UCurveFloat* RotationRateCurve = nullptr;
 };
 
 USTRUCT(BlueprintType)
@@ -215,7 +215,7 @@ public:
     UPROPERTY(EditDefaultsOnly)
     FTransform Transform;
     UPROPERTY(EditDefaultsOnly)
-    UPrimitiveComponent* Component;
+    class UPrimitiveComponent* Component;
 };
 
 USTRUCT(BlueprintType)
@@ -286,9 +286,9 @@ struct FGSMantleAsset
     GENERATED_BODY()
 public:
     UPROPERTY(EditDefaultsOnly)
-    UAnimMontage* AnimMontage = nullptr;
+    class UAnimMontage* AnimMontage = nullptr;
     UPROPERTY(EditDefaultsOnly)
-    UCurveVector* PositionCorrectionCurve = nullptr;
+    class UCurveVector* PositionCorrectionCurve = nullptr;
     UPROPERTY(EditDefaultsOnly)
     FVector StartingOffset = FVector::ZeroVector;
     UPROPERTY(EditDefaultsOnly)
@@ -311,9 +311,9 @@ struct FGSMantleParams
     GENERATED_BODY()
 public:
     UPROPERTY(EditDefaultsOnly)
-    UAnimMontage* AnimMontage = nullptr;
+    class UAnimMontage* AnimMontage = nullptr;
     UPROPERTY(EditDefaultsOnly)
-    UCurveVector* PositionCorrectionCurve = nullptr;
+    class UCurveVector* PositionCorrectionCurve = nullptr;
     UPROPERTY(EditDefaultsOnly)
     FVector StartingOffset = FVector::ZeroVector;
     UPROPERTY(EditDefaultsOnly)
@@ -345,7 +345,7 @@ struct FGSRotateInPlaceAsset
     GENERATED_BODY()
 public:
     UPROPERTY(EditDefaultsOnly)
-    UAnimSequenceBase* Animation = nullptr;
+    class UAnimSequenceBase* Animation = nullptr;
     UPROPERTY(EditDefaultsOnly)
     FName SlotName = "None";
     UPROPERTY(EditDefaultsOnly)
@@ -364,7 +364,7 @@ struct FGSTurnInPlaceAsset
     GENERATED_BODY()
 public:
     UPROPERTY(EditDefaultsOnly)
-    UAnimSequenceBase* Animation = nullptr;
+    class UAnimSequenceBase* Animation = nullptr;
     UPROPERTY(EditDefaultsOnly)
     float AnimatedAngle = 0;
     UPROPERTY(EditDefaultsOnly)

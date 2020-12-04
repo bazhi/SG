@@ -44,12 +44,12 @@ void ASGCharacter::GetControlForwardAndRightVector(FVector& Forward, FVector& Ri
 
 void ASGCharacter::GetCapsuleBaseLocation(float ZOffset, FVector& ReturnValue)
 {
-    auto CapsuleComponent = GetCapsuleComponent();
-    if(CapsuleComponent)
+    auto CapsuleComponentTemp = GetCapsuleComponent();
+    if(CapsuleComponentTemp)
     {
-        FVector UpVector = CapsuleComponent->GetUpVector();
-        float HalfHeight = CapsuleComponent->GetScaledCapsuleHalfHeight();
-        FVector WorldLocation = CapsuleComponent->GetComponentLocation();
+        FVector UpVector = CapsuleComponentTemp->GetUpVector();
+        float HalfHeight = CapsuleComponentTemp->GetScaledCapsuleHalfHeight();
+        FVector WorldLocation = CapsuleComponentTemp->GetComponentLocation();
         ReturnValue = WorldLocation - UpVector * (ZOffset + HalfHeight);
     }
 }
