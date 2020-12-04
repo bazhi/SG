@@ -165,3 +165,212 @@ public:
     UPROPERTY(EditDefaultsOnly)
     float PlayRate = 1.0f;
 };
+
+USTRUCT(BlueprintType)
+struct FSGMovementSettings
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    float WalkSpeed = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float RunSpeed = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float SprintSpeed = 0;
+    UPROPERTY(EditDefaultsOnly)
+    UCurveVector* MovementCurve = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    UCurveFloat* RotationRateCurve = nullptr;
+};
+
+USTRUCT(BlueprintType)
+struct FSGMovementSettingsStance
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    FSGMovementSettings Standing;
+    UPROPERTY(EditDefaultsOnly)
+    FSGMovementSettings Crouching;
+};
+
+USTRUCT(BlueprintType)
+struct FSGMovementSettingsState
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    FSGMovementSettingsStance VelocityDirection;
+    UPROPERTY(EditDefaultsOnly)
+    FSGMovementSettingsStance LookingDirection;
+    UPROPERTY(EditDefaultsOnly)
+    FSGMovementSettingsStance Aiming;
+};
+
+USTRUCT(BlueprintType)
+struct FGSComponentAndTransform
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    FTransform Transform;
+    UPROPERTY(EditDefaultsOnly)
+    UPrimitiveComponent* Component;
+};
+
+USTRUCT(BlueprintType)
+struct FGSCameraSettings
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    float TargetArmLength = 0;
+    UPROPERTY(EditDefaultsOnly)
+    FVector SocketOffset = FVector::ZeroVector;
+    UPROPERTY(EditDefaultsOnly)
+    float LagSpeed = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float RotationLagSpeed = 0;
+    UPROPERTY(EditDefaultsOnly)
+    bool DoCollisionTest = true;
+};
+
+USTRUCT(BlueprintType)
+struct FGSCameraSettingsGait
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    FGSCameraSettings Walking;
+    UPROPERTY(EditDefaultsOnly)
+    FGSCameraSettings Running;
+    UPROPERTY(EditDefaultsOnly)
+    FGSCameraSettings Sprinting;
+    UPROPERTY(EditDefaultsOnly)
+    FGSCameraSettings Crouching;
+};
+
+USTRUCT(BlueprintType)
+struct FGSCameraSettingsState
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    FGSCameraSettingsGait VelocityDirection;
+    UPROPERTY(EditDefaultsOnly)
+    FGSCameraSettingsGait LookingDirection;
+    UPROPERTY(EditDefaultsOnly)
+    FGSCameraSettingsGait Aiming;
+};
+
+USTRUCT(BlueprintType)
+struct FGSDynamicMontageParams
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    UAnimSequenceBase* Animation = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    float BlendInTime = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float BlendOutTime = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float PlayRate = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float StartTime = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FGSMantleAsset
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    UAnimMontage* AnimMontage = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    UCurveVector* PositionCorrectionCurve = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    FVector StartingOffset = FVector::ZeroVector;
+    UPROPERTY(EditDefaultsOnly)
+    float LowHeight = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float LowPlayRate = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float LowStartPosition = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float HighHeight = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float HighPlayRate = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float HighStartPosition = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FGSMantleParams
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    UAnimMontage* AnimMontage = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    UCurveVector* PositionCorrectionCurve = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    FVector StartingOffset = FVector::ZeroVector;
+    UPROPERTY(EditDefaultsOnly)
+    float layRate = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float StartPosition = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FGSMantleTraceSettings
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    float MaxLedgeHeight = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float MinLedgeHeight = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float ReachDistance = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float ForwardTraceRadius = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float DownwardTraceRadius = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FGSRotateInPlaceAsset
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    UAnimSequenceBase* Animation = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    FName SlotName = "None";
+    UPROPERTY(EditDefaultsOnly)
+    float SlowTurnRate = 90;
+    UPROPERTY(EditDefaultsOnly)
+    float FastTurnRate = 90;
+    UPROPERTY(EditDefaultsOnly)
+    float SlowPlayRate = 1.0f;
+    UPROPERTY(EditDefaultsOnly)
+    float FastPlayRate = 1.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FGSTurnInPlaceAsset
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(EditDefaultsOnly)
+    UAnimSequenceBase* Animation = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    float AnimatedAngle = 0;
+    UPROPERTY(EditDefaultsOnly)
+    FName SlotName = "None";
+    UPROPERTY(EditDefaultsOnly)
+    float PlayRate = 1.0f;
+    UPROPERTY(EditDefaultsOnly)
+    bool ScaleTurnAngle = true;
+};
