@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
+
 #include "ECharacter.generated.h"
 
 UENUM(BlueprintType)
@@ -195,7 +197,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSGMovementSettingsState
+struct FSGMovementSettingsState : FTableRowBase
 {
     GENERATED_BODY()
 public:

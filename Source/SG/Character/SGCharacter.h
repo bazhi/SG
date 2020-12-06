@@ -21,20 +21,47 @@ protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
-protected:
-    void OnBeginPlay();
-
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
     // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 protected:
-    void GetControlForwardAndRightVector(FVector& Forward, FVector& Right);
-    void GetCapsuleBaseLocation(float ZOffset, FVector& ReturnValue);
 
+
+    //Utility
+    void GetControlForwardAndRightVector(FVector& Forward, FVector& Right);
+    FVector GetCapsuleBaseLocation(float ZOffset);
+    FVector GetCapsuleLocationFromBase(const FVector& BaseLocation, float ZOffset);
+    float GetAnimCurveValue(const FName& CurveName);
+
+    //Input
+    void PlayerMovementInput(bool IsForwardAxis);
+    FVector GetPlayerMovementInput();
+    void FixDiagonalGamepadValues(float InX, float InY, float& OutX, float& OutY);
+
+    //Essential Information
+    void SetEssentialValues();
+    void CacheValues();
+    FVector CalculateAcceleration();
+
+    //State Changes
+    void OnBeginPlay();
+    void OnCharacteMovementModeChanged(EMovementMode PrevMovementMode, EMovementMode NewMovementMode, uint8 PrevCustomMode, uint8 NewCustomMode);
+    void OnMovementStateChanged(EMovementState NewMovementState);
+    void OnMovementActionChanged(EMovementAction NewMovementAction);
+    void OnStanceChanged(EStance NewStance);
+    void OnRotationModeChanged(ERotationMode NewRotationMode);
+    void OnGaitChanged(EGait NewActualGait);
+    void OnViewModeChanged(EViewMode NewViewMode);
+    void OnOverlayStateChanged(EOverlayState NewOverlayState);
+
+    //Movement System
+    void SetMovementModel();
+
+    //RagdollSystem
+    void RagdollStart();
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
     class UTimelineComponent* MantleTimeline;
