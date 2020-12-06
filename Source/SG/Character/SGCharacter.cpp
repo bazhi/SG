@@ -101,7 +101,7 @@ void ASGCharacter::OnMovementStateChanged(EMovementState NewMovementState)
             switch (PreviousMovementState)
             {
                 case EMovementState::Mantling:
-                    if(MantleTimeline)
+                    if (MantleTimeline)
                     {
                         MantleTimeline->Stop();
                     }
@@ -148,6 +148,67 @@ void ASGCharacter::OnStanceChanged(EStance NewStance)
     Stance = NewStance;
 }
 
+void ASGCharacter::OnRotationModeChanged(ERotationMode NewRotationMode)
+{
+    ERotationMode PreviousRotationMode = RotationMode;
+    RotationMode = NewRotationMode;
+
+    switch (RotationMode)
+    {
+        case ERotationMode::VelocityDirection:
+            switch (ViewMode)
+            {
+                case EViewMode::FirstPerson:
+                    ViewMode = EViewMode::ThirdPerson;
+                    break;
+                default: ;
+            }
+            break;
+        default: ;
+    }
+}
+
+void ASGCharacter::OnGaitChanged(EGait NewActualGait)
+{
+    EGait PreviousActualGait = Gait;
+    Gait = NewActualGait;
+}
+
+void ASGCharacter::OnViewModeChanged(EViewMode NewViewMode)
+{
+    EViewMode PreviousViewMode = ViewMode;
+    ViewMode = NewViewMode;
+    switch (ViewMode)
+    {
+        case EViewMode::ThirdPerson:
+            switch (RotationMode)
+            {
+                case ERotationMode::VelocityDirection:
+                case ERotationMode::LookingDirection:
+                    RotationMode = DesiredRotationMode;
+                    break;
+                default: ;
+            }
+            break;
+        case EViewMode::FirstPerson:
+            switch (RotationMode)
+            {
+                case ERotationMode::VelocityDirection:
+                    RotationMode = ERotationMode::LookingDirection;
+                    break;
+                default: ;
+            }
+            break;
+        default: ;
+    }
+}
+
+void ASGCharacter::OnOverlayStateChanged(EOverlayState NewOverlayState)
+{
+    EOverlayState PreviousOverlayState = OverlayState;
+    OverlayState = NewOverlayState;
+}
+
 
 void ASGCharacter::SetMovementModel()
 {
@@ -158,6 +219,95 @@ void ASGCharacter::SetMovementModel()
             MovementData = *FindResult;
         }
     }
+}
+
+void ASGCharacter::UpdateCharacterMovement()
+{
+    EGait AllowedGait = GetAllowedGait();
+    EGait ActualGait = GetActualGait(AllowedGait);
+    if(ActualGait != Gait)
+    {
+        Gait = ActualGait;
+        
+    }
+}
+
+EGait ASGCharacter::GetAllowedGait()
+{
+    if(EStance::Standing == Stance &&(ERotationMode::VelocityDirection == RotationMode || ERotationMode::LookingDirection == RotationMode))
+    {
+        if (EGait::Sprinting == DesiredGait)
+        {
+            if (CanSprint())
+            {
+                return EGait::Sprinting;
+            }
+            return EGait::Running;
+        }
+        return DesiredGait;
+    }else
+    {
+        if(EGait::Walking == DesiredGait)
+        {
+            return EGait::Walking;
+        }else
+        {
+            return EGait::Running;
+        }
+    }
+}
+
+EGait ASGCharacter::GetActualGait(EGait AllowedGait)
+{
+    float LocalWalkSpeed = CurrentMovementSettings.WalkSpeed;
+    float LocalRunSpeed = CurrentMovementSettings.RunSpeed;
+    //float LocalSprintSpeed = CurrentMovementSettings.SprintSpeed;
+    if(Speed >= LocalRunSpeed + 10.0f)
+    {
+        if(EGait::Sprinting == AllowedGait)
+        {
+            return EGait::Sprinting;
+        }else
+        {
+            return EGait::Running;
+        }
+    }else if(Speed >= LocalWalkSpeed + 10.0f)
+    {
+        return EGait::Running;
+    }else
+    {
+        return EGait::Walking;
+    }
+}
+
+bool ASGCharacter::CanSprint()
+{
+    if(HasMovementInput)
+    {
+        switch (RotationMode) {
+            case ERotationMode::VelocityDirection:
+                return MovementInputAmount > 0.9f;
+                break;
+            case ERotationMode::LookingDirection:
+                if(auto CharMovement = GetCharacterMovement())
+                {
+                   FRotator OrientationRotator = CharMovement->GetCurrentAcceleration().ToOrientationRotator();
+                   FRotator ControlRotation = GetControlRotation();
+                   FRotator DeltaRotator = UKismetMathLibrary::NormalizedDeltaRotator(OrientationRotator, ControlRotation);
+                   return MovementInputAmount > 0.9f && FMath::Abs(DeltaRotator.Yaw) < 50.0f;
+                }
+                break;
+            case ERotationMode::Aiming:
+            return false;
+                break;
+            default: ;
+        }
+    }
+    return false;
+}
+
+void ASGCharacter::RagdollStart()
+{
 }
 
 // Called every frame

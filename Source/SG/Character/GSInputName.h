@@ -3,11 +3,9 @@
 
 #include "UObject/NameTypes.h"
 #include "CoreMinimal.h"
-#include "GSInputName.generated.h"
 
-class GSInputName
+namespace GSInputName
 {
-public:
     static class FName MoveForwardBackward = "MoveForward/Backwards";
     static class FName MoveRightLeft = "MoveRight/Left";
     static class FName LookUpDown = "LookUp/Down";

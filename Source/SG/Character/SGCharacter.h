@@ -59,6 +59,10 @@ protected:
 
     //Movement System
     void SetMovementModel();
+    void UpdateCharacterMovement();
+    EGait GetAllowedGait();
+    EGait GetActualGait(EGait AllowedGait);
+    bool CanSprint();
 
     //RagdollSystem
     void RagdollStart();

@@ -197,7 +197,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSGMovementSettingsState : FTableRowBase
+struct FSGMovementSettingsState : public FTableRowBase
 {
     GENERATED_BODY()
 public:
