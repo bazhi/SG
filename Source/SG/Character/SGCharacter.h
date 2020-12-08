@@ -60,6 +60,9 @@ protected:
     //Movement System
     void SetMovementModel();
     void UpdateCharacterMovement();
+    void UpdateDynamicMovementSettings(EGait AllowedGait);
+    FSGMovementSettings GetTargetMovementSettings();
+    float GetMappedSpeed();
     EGait GetAllowedGait();
     EGait GetActualGait(EGait AllowedGait);
     bool CanSprint();

@@ -3,6 +3,9 @@
 #include "Components/CapsuleComponent.h"
 #include "GSInputName.h"
 #include "Components/TimelineComponent.h"
+
+#include "Curves/CurveVector.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/DataTableFunctionLibrary.h"
 
@@ -225,16 +228,96 @@ void ASGCharacter::UpdateCharacterMovement()
 {
     EGait AllowedGait = GetAllowedGait();
     EGait ActualGait = GetActualGait(AllowedGait);
-    if(ActualGait != Gait)
+    if (ActualGait != Gait)
     {
         Gait = ActualGait;
-        
+        UpdateDynamicMovementSettings(AllowedGait);
+    }
+}
+
+void ASGCharacter::UpdateDynamicMovementSettings(EGait AllowedGait)
+{
+    CurrentMovementSettings = GetTargetMovementSettings();
+    float AllowedSpeed = 0;
+    switch (AllowedGait)
+    {
+        case EGait::Walking:
+            AllowedSpeed = CurrentMovementSettings.WalkSpeed;
+            break;
+        case EGait::Running:
+            AllowedSpeed = CurrentMovementSettings.RunSpeed;
+            break;
+        case EGait::Sprinting:
+            AllowedSpeed = CurrentMovementSettings.SprintSpeed;
+            break;
+        default: ;
+    }
+    if (auto LocalCharacterMovement = GetCharacterMovement())
+    {
+        LocalCharacterMovement->MaxWalkSpeed = AllowedSpeed;
+        LocalCharacterMovement->MaxWalkSpeedCrouched = AllowedSpeed;
+
+        float InTime = GetMappedSpeed();
+        if (CurrentMovementSettings.MovementCurve)
+        {
+            FVector VectorValue = CurrentMovementSettings.MovementCurve->GetVectorValue(InTime);
+            LocalCharacterMovement->MaxAcceleration = VectorValue.X;
+            LocalCharacterMovement->BrakingDecelerationWalking = VectorValue.Y;
+            LocalCharacterMovement->GroundFriction = VectorValue.Z;
+        }
+    }
+}
+
+FSGMovementSettings ASGCharacter::GetTargetMovementSettings()
+{
+    const FSGMovementSettingsStance* SettingsStance = nullptr;
+    switch (RotationMode)
+    {
+        case ERotationMode::VelocityDirection:
+            SettingsStance = &MovementData.VelocityDirection;
+            break;
+        case ERotationMode::LookingDirection:
+            SettingsStance = &MovementData.LookingDirection;
+            break;
+        case ERotationMode::Aiming:
+            SettingsStance = &MovementData.Aiming;
+            break;
+        default: ;
+    }
+    if(SettingsStance)
+    {
+        switch (Stance)
+        {
+            case EStance::Standing:
+                return SettingsStance->Standing;
+            case EStance::Crouching:
+                return SettingsStance->Crouching;
+            default:;
+        }
+    }
+    return FSGMovementSettings();
+}
+
+float ASGCharacter::GetMappedSpeed()
+{
+    float LocWalkSpeed = CurrentMovementSettings.WalkSpeed;
+    float LocRunSpeed = CurrentMovementSettings.RunSpeed;
+    float LocSprintSpeed = CurrentMovementSettings.SprintSpeed;
+    if(Speed <= LocWalkSpeed)
+    {
+        return UKismetMathLibrary::MapRangeClamped(Speed, 0.f, LocWalkSpeed, 0.f, 1.f);
+    }else if(Speed <= LocRunSpeed)
+    {
+        return UKismetMathLibrary::MapRangeClamped(Speed, LocWalkSpeed, LocRunSpeed, 1.f, 2.f);
+    }else
+    {
+        return UKismetMathLibrary::MapRangeClamped(Speed, LocRunSpeed, LocSprintSpeed, 2.f, 3.f);
     }
 }
 
 EGait ASGCharacter::GetAllowedGait()
 {
-    if(EStance::Standing == Stance &&(ERotationMode::VelocityDirection == RotationMode || ERotationMode::LookingDirection == RotationMode))
+    if (EStance::Standing == Stance && (ERotationMode::VelocityDirection == RotationMode || ERotationMode::LookingDirection == RotationMode))
     {
         if (EGait::Sprinting == DesiredGait)
         {
@@ -245,12 +328,14 @@ EGait ASGCharacter::GetAllowedGait()
             return EGait::Running;
         }
         return DesiredGait;
-    }else
+    }
+    else
     {
-        if(EGait::Walking == DesiredGait)
+        if (EGait::Walking == DesiredGait)
         {
             return EGait::Walking;
-        }else
+        }
+        else
         {
             return EGait::Running;
         }
@@ -262,19 +347,22 @@ EGait ASGCharacter::GetActualGait(EGait AllowedGait)
     float LocalWalkSpeed = CurrentMovementSettings.WalkSpeed;
     float LocalRunSpeed = CurrentMovementSettings.RunSpeed;
     //float LocalSprintSpeed = CurrentMovementSettings.SprintSpeed;
-    if(Speed >= LocalRunSpeed + 10.0f)
+    if (Speed >= LocalRunSpeed + 10.0f)
     {
-        if(EGait::Sprinting == AllowedGait)
+        if (EGait::Sprinting == AllowedGait)
         {
             return EGait::Sprinting;
-        }else
+        }
+        else
         {
             return EGait::Running;
         }
-    }else if(Speed >= LocalWalkSpeed + 10.0f)
+    }
+    else if (Speed >= LocalWalkSpeed + 10.0f)
     {
         return EGait::Running;
-    }else
+    }
+    else
     {
         return EGait::Walking;
     }
@@ -282,23 +370,24 @@ EGait ASGCharacter::GetActualGait(EGait AllowedGait)
 
 bool ASGCharacter::CanSprint()
 {
-    if(HasMovementInput)
+    if (HasMovementInput)
     {
-        switch (RotationMode) {
+        switch (RotationMode)
+        {
             case ERotationMode::VelocityDirection:
                 return MovementInputAmount > 0.9f;
                 break;
             case ERotationMode::LookingDirection:
-                if(auto CharMovement = GetCharacterMovement())
+                if (auto CharMovement = GetCharacterMovement())
                 {
-                   FRotator OrientationRotator = CharMovement->GetCurrentAcceleration().ToOrientationRotator();
-                   FRotator ControlRotation = GetControlRotation();
-                   FRotator DeltaRotator = UKismetMathLibrary::NormalizedDeltaRotator(OrientationRotator, ControlRotation);
-                   return MovementInputAmount > 0.9f && FMath::Abs(DeltaRotator.Yaw) < 50.0f;
+                    FRotator OrientationRotator = CharMovement->GetCurrentAcceleration().ToOrientationRotator();
+                    FRotator ControlRotation = GetControlRotation();
+                    FRotator DeltaRotator = UKismetMathLibrary::NormalizedDeltaRotator(OrientationRotator, ControlRotation);
+                    return MovementInputAmount > 0.9f && FMath::Abs(DeltaRotator.Yaw) < 50.0f;
                 }
                 break;
             case ERotationMode::Aiming:
-            return false;
+                return false;
                 break;
             default: ;
         }
