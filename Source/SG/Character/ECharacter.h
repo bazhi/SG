@@ -5,6 +5,8 @@
 
 #include "ECharacter.generated.h"
 
+#define ETraceType
+
 UENUM(BlueprintType)
 enum class EGait : uint8
 {
@@ -319,9 +321,9 @@ public:
     UPROPERTY(EditDefaultsOnly)
     FVector StartingOffset = FVector::ZeroVector;
     UPROPERTY(EditDefaultsOnly)
-    float layRate = 0;
+    float PlayRate = 0;
     UPROPERTY(EditDefaultsOnly)
-    float StartPosition = 0;
+    float StartingPosition = 0;
 };
 
 USTRUCT(BlueprintType)

@@ -11,6 +11,7 @@
 
 #include "Kismet/KismetMathLibrary.h"
 
+
 // Sets default values
 ASGCharacter::ASGCharacter()
 {
@@ -284,7 +285,7 @@ FSGMovementSettings ASGCharacter::GetTargetMovementSettings()
             break;
         default: ;
     }
-    if(SettingsStance)
+    if (SettingsStance)
     {
         switch (Stance)
         {
@@ -292,7 +293,7 @@ FSGMovementSettings ASGCharacter::GetTargetMovementSettings()
                 return SettingsStance->Standing;
             case EStance::Crouching:
                 return SettingsStance->Crouching;
-            default:;
+            default: ;
         }
     }
     return FSGMovementSettings();
@@ -303,13 +304,15 @@ float ASGCharacter::GetMappedSpeed()
     float LocWalkSpeed = CurrentMovementSettings.WalkSpeed;
     float LocRunSpeed = CurrentMovementSettings.RunSpeed;
     float LocSprintSpeed = CurrentMovementSettings.SprintSpeed;
-    if(Speed <= LocWalkSpeed)
+    if (Speed <= LocWalkSpeed)
     {
         return UKismetMathLibrary::MapRangeClamped(Speed, 0.f, LocWalkSpeed, 0.f, 1.f);
-    }else if(Speed <= LocRunSpeed)
+    }
+    else if (Speed <= LocRunSpeed)
     {
         return UKismetMathLibrary::MapRangeClamped(Speed, LocWalkSpeed, LocRunSpeed, 1.f, 2.f);
-    }else
+    }
+    else
     {
         return UKismetMathLibrary::MapRangeClamped(Speed, LocRunSpeed, LocSprintSpeed, 2.f, 3.f);
     }
@@ -395,8 +398,236 @@ bool ASGCharacter::CanSprint()
     return false;
 }
 
+void ASGCharacter::UpdateGroundedRotation()
+{
+    if (EMovementAction::Rolling == MovementAction)
+    {
+        if (HasMovementInput)
+        {
+            SmoothCharacterRotation(FRotator(0, 0, LastMovementInputRotation.Yaw), 0.f, 2.f);
+        }
+    }
+    else if (EMovementAction::None == MovementAction)
+    {
+        if (CanUpdateMovingRotation())
+        {
+            switch (RotationMode)
+            {
+                case ERotationMode::VelocityDirection:
+                    SmoothCharacterRotation(FRotator(0, 0, LastVelocityRotation.Yaw), 800, CalculateGroundedRotationRate());
+                    break;
+                case ERotationMode::LookingDirection:
+                    switch (Gait)
+                    {
+                        case EGait::Walking:
+                        case EGait::Running:
+                            SmoothCharacterRotation(FRotator(0, 0, GetControlRotation().Yaw + GetAnimCurveValue("YawOffset")), 500, CalculateGroundedRotationRate());
+                            break;
+                        case EGait::Sprinting:
+                            SmoothCharacterRotation(FRotator(0, 0, GetControlRotation().Yaw), 1000, 20);
+                            break;
+                        default: ;
+                    }
+                    break;
+                case ERotationMode::Aiming:
+                    break;
+                default: ;
+            }
+        }
+        else
+        {
+            if (EViewMode::FirstPerson == ViewMode || ERotationMode::Aiming == RotationMode)
+            {
+                LimitRotation(-100, 100, 20);
+            }
+
+            float RotationAmount = GetAnimCurveValue("RotationAmount");
+            if (FMath::Abs(RotationAmount) > 0.001f)
+            {
+                AddActorWorldRotation(FRotator(0, 0, GetWorld()->GetDeltaSeconds() * 30.0f * RotationAmount));
+                TargetRotation = GetActorRotation();
+            }
+        }
+    }
+}
+
+void ASGCharacter::UpdateInAirRotation()
+{
+    switch (RotationMode)
+    {
+        case ERotationMode::VelocityDirection:
+        case ERotationMode::LookingDirection:
+            SmoothCharacterRotation(FRotator(0, 0, InAirRotation.Yaw), 0, 5);
+            break;
+        case ERotationMode::Aiming:
+            SmoothCharacterRotation(FRotator(0, 0, GetControlRotation().Yaw), 0, 15.0f);
+            break;
+        default: ;
+    }
+}
+
+void ASGCharacter::SmoothCharacterRotation(FRotator Target, float TargetInterpSpeed, float ActorInterpSpeed)
+{
+    float Delta = GetWorld()->GetDeltaSeconds();
+    TargetRotation = UKismetMathLibrary::RInterpTo_Constant(TargetRotation, Target, Delta, TargetInterpSpeed);
+    SetActorRotation(UKismetMathLibrary::RInterpTo(GetActorRotation(), TargetRotation, Delta, ActorInterpSpeed));
+}
+
+void ASGCharacter::AddToCharacterRotation(FRotator DeltaRotation)
+{
+    TargetRotation = UKismetMathLibrary::ComposeRotators(TargetRotation, DeltaRotation);
+    AddActorWorldRotation(DeltaRotation);
+}
+
+void ASGCharacter::LimitRotation(float AimYawMin, float AimYawMax, float InterpSpeed)
+{
+    FRotator ControlRotation = GetControlRotation();
+    FRotator DeltaRotation = UKismetMathLibrary::NormalizedDeltaRotator(ControlRotation, GetActorRotation());
+    bool Condition = UKismetMathLibrary::InRange_FloatFloat(DeltaRotation.Yaw, AimYawMin, AimYawMax, true, true);
+    float A = AimYawMin + ControlRotation.Yaw;
+    float B = AimYawMax + ControlRotation.Yaw;
+    float PickZ = DeltaRotation.Yaw > 0 ? A : B;
+    SmoothCharacterRotation(FRotator(0, 0, PickZ), 0, InterpSpeed);
+}
+
+bool ASGCharacter::SetActorLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport, FHitResult& SweepHitResult)
+{
+    TargetRotation = NewRotation;
+    return K2_SetActorLocationAndRotation(NewLocation, NewRotation, bSweep, SweepHitResult, bTeleport);
+}
+
+float ASGCharacter::CalculateGroundedRotationRate()
+{
+    if (CurrentMovementSettings.RotationRateCurve)
+    {
+        float CurveFloat = CurrentMovementSettings.RotationRateCurve->GetFloatValue(GetMappedSpeed());
+        return CurveFloat * UKismetMathLibrary::MapRangeClamped(AimYawRate, 0, 300, 1, 3);
+    }
+    return 0.0f;
+}
+
+bool ASGCharacter::CanUpdateMovingRotation()
+{
+    return ((IsMoving && HasMovementInput) || (Speed > 150.0f)) && !HasAnyRootMotion();
+}
+
+bool ASGCharacter::MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugTrace::Type DebugType)
+{
+    DebugType = GetTraceDebugType(DebugType);
+    FVector BaseLocation = GetCapsuleBaseLocation(2.0f);
+    FVector PlayerMoveInput = GetPlayerMovementInput();
+    float SumHeightAverage = (TraceSettings.MaxLedgeHeight + TraceSettings.MinLedgeHeight) * 0.5f;
+    float DiffHeightAverage = (TraceSettings.MaxLedgeHeight - TraceSettings.MinLedgeHeight) * 0.5f;
+    FVector Start = BaseLocation + PlayerMoveInput * -30.0f + FVector(0, 0, SumHeightAverage);
+    FVector End = Start + PlayerMoveInput * TraceSettings.ReachDistance;
+    float Radius = TraceSettings.ForwardTraceRadius;
+    float HalfHeight = DiffHeightAverage + 1.0f;
+    TArray<AActor*> ActorsToIgnore;
+    FHitResult HitResult;
+    UKismetSystemLibrary::CapsuleTraceSingle(GetWorld(), Start, End, Radius, HalfHeight, TraceTypeClimbable, false, ActorsToIgnore, DebugType, HitResult, true, FColor::Yellow, FColor::Red, 1.0f);
+    FVector InitialTraceImpactPoint;
+    FVector InitialTraceNormal;
+    if(auto LocalCharacterMovement = GetCharacterMovement())
+    {
+        bool bWalkable = LocalCharacterMovement->IsWalkable(HitResult);
+
+        if(!bWalkable && HitResult.bBlockingHit && !HitResult.bStartPenetrating)
+        {
+            InitialTraceImpactPoint = HitResult.ImpactPoint;
+            InitialTraceNormal = HitResult.ImpactNormal;
+        }else
+        {
+            return false;
+        }
+    }
+
+    End = FVector(InitialTraceImpactPoint.X, InitialTraceImpactPoint.Y, GetCapsuleBaseLocation(2).Z) + InitialTraceNormal * -15;
+    Start = End;
+    Start.Z += (TraceSettings.MaxLedgeHeight + TraceSettings.DownwardTraceRadius + 1.0f);
+    Radius = TraceSettings.DownwardTraceRadius;
+    UKismetSystemLibrary::CapsuleTraceSingle(GetWorld(), Start, End, Radius, HalfHeight, TraceTypeClimbable, false, ActorsToIgnore, DebugType, HitResult, true, FColor::Yellow, FColor::Red, 1.0f);
+
+    FVector DownTraceLocation;
+    UPrimitiveComponent* HitComponent = nullptr;
+    if (auto LocalCharacterMovement = GetCharacterMovement())
+    {
+        bool bWalkable = LocalCharacterMovement->IsWalkable(HitResult);
+        if(bWalkable && HitResult.bBlockingHit)
+        {
+            DownTraceLocation = FVector(HitResult.Location.X, HitResult.Location.Y, HitResult.ImpactPoint.Z);
+            HitComponent = HitResult.Component.Get();
+        }else
+        {
+            return false;
+        }
+    }
+    FVector TargetLocation = GetCapsuleLocationFromBase(DownTraceLocation, 2.0f);
+    if(!CapsuleHasRoomCheck(GetCapsuleComponent(), TargetLocation, 0, 0, DebugType))
+    {
+        return false;
+    }
+    FRotator TargetTransformRotation = (InitialTraceNormal * FVector(-1, -1, 0)).ToOrientationRotator();
+    FTransform TargetTransform = UKismetMathLibrary::MakeTransform(TargetLocation, TargetTransformRotation, FVector::OneVector);
+    float MantleHeight = TargetTransform.GetLocation().Z - GetActorLocation().Z;
+
+    EMantleType MantleType = EMantleType::LowMantle;
+    switch (MovementState)
+    {
+        case EMovementState::None:
+        case EMovementState::Grounded:
+        case EMovementState::Mantling:
+        case EMovementState::Ragdoll:
+            if(MantleHeight > 125.0f)
+            {
+                MantleType = EMantleType::HighMantle;
+            }else
+            {
+                MantleType = EMantleType::LowMantle;
+            }
+            break;
+        case EMovementState::InAir:
+            MantleType = EMantleType::FallingCatch;
+            break;;
+        default: ;
+    }
+    FGSComponentAndTransform ComponentAndTransform;
+    ComponentAndTransform.Transform = TargetTransform;
+    ComponentAndTransform.Component = HitComponent;
+    MantleStart(MantleHeight, ComponentAndTransform, MantleType);
+    return true;
+}
+
+void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWS, EMantleType MantleType)
+{
+    FGSMantleAsset MantleAsset = GetMantleAsset(MantleType);
+    MantleParams.AnimMontage = MantleAsset.AnimMontage;
+    MantleParams.PositionCorrectionCurve = MantleAsset.PositionCorrectionCurve;
+    MantleParams.StartingOffset = MantleAsset.StartingOffset;
+    MantleParams.StartingPosition = UKismetMathLibrary::MapRangeClamped(MantleHeight, MantleAsset.LowHeight, MantleAsset.HighHeight, MantleAsset.LowStartPosition, MantleAsset.HighStartPosition);
+    MantleParams.PlayRate = UKismetMathLibrary::MapRangeClamped(MantleHeight, MantleAsset.LowHeight, MantleAsset.HighHeight, MantleAsset.LowPlayRate, MantleAsset.HighPlayRate);
+}
+
+bool ASGCharacter::CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector TargetLocation, float HeightOffset, float RadiusOffset, EDrawDebugTrace::Type DebugType)
+{
+    return true;
+}
+
+FGSMantleAsset ASGCharacter::GetMantleAsset(EMantleType MantleType)
+{
+    return FGSMantleAsset();
+}
+
 void ASGCharacter::RagdollStart()
 {
+}
+
+EDrawDebugTrace::Type ASGCharacter::GetTraceDebugType(EDrawDebugTrace::Type DebugType)
+{
+    if(IsLocallyControlled())
+    {
+        return DebugType;
+    }
+    return EDrawDebugTrace::None;
 }
 
 // Called every frame

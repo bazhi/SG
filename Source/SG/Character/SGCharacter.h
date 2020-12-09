@@ -6,6 +6,9 @@
 
 #include "Engine/DataTable.h"
 
+#include "Kismet/KismetSystemLibrary.h"
+
+
 #include "SGCharacter.generated.h"
 
 UCLASS()
@@ -67,8 +70,29 @@ protected:
     EGait GetActualGait(EGait AllowedGait);
     bool CanSprint();
 
+    //Rotation System
+    void UpdateGroundedRotation();
+    void UpdateInAirRotation();
+    void SmoothCharacterRotation(FRotator Target, float TargetInterpSpeed, float ActorInterpSpeed);
+    void AddToCharacterRotation(FRotator DeltaRotation);
+    void LimitRotation(float AimYawMin, float AimYawMax, float InterpSpeed);
+    bool SetActorLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport, FHitResult& SweepHitResult);
+    float CalculateGroundedRotationRate();
+    bool CanUpdateMovingRotation();
+
+    //Mantle System
+    bool MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugTrace::Type DebugType); //Can Climb/Vault
+    void MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWS, EMantleType MantleType);
+    void MantleEnd();
+    void MantleUpdate(float BlendIn);
+    bool CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector TargetLocation, float HeightOffset, float RadiusOffset, EDrawDebugTrace::Type DebugType);
+    FGSMantleAsset GetMantleAsset(EMantleType MantleType);
+
     //RagdollSystem
     void RagdollStart();
+
+    //Debug
+    EDrawDebugTrace::Type GetTraceDebugType(EDrawDebugTrace::Type DebugType);
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
     class UTimelineComponent* MantleTimeline;
@@ -176,4 +200,7 @@ protected:
     FVector PreviousVelocity = FVector::ZeroVector;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cached Variables")
     float PreviousAimYaw = 0;
+
+protected:
+    ETraceTypeQuery TraceTypeClimbable;
 };
