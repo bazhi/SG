@@ -9,10 +9,15 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 
+#include "SG/Interface/GSCameraInterface.h"
+#include "SG/Interface/GSCharacterInterface.h"
+
+
+
 #include "SGCharacter.generated.h"
 
 UCLASS()
-class SG_API ASGCharacter : public ACharacter
+class SG_API ASGCharacter : public ACharacter, public IGSCharacterInterface, public IGSCameraInterface
 {
     GENERATED_BODY()
 
@@ -82,7 +87,7 @@ protected:
 
     //Mantle System
     bool MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugTrace::Type DebugType); //Can Climb/Vault
-    void MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWS, EMantleType MantleType);
+    void MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWorldSpace, EMantleType MantleType);
     void MantleEnd();
     void MantleUpdate(float BlendIn);
     bool CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector TargetLocation, float HeightOffset, float RadiusOffset, EDrawDebugTrace::Type DebugType);
@@ -175,7 +180,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
     FGSMantleParams MantleParams;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
-    FGSComponentAndTransform MantleLedgeLS;
+    FGSComponentAndTransform MantleLedgeLocalSpace;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
     FTransform MantleTarget;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")

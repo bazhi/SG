@@ -11,6 +11,8 @@
 
 #include "Kismet/KismetMathLibrary.h"
 
+#include "SG/BlueprintLibrary/GSBlueprintLibrary.h"
+
 
 // Sets default values
 ASGCharacter::ASGCharacter()
@@ -60,10 +62,10 @@ void ASGCharacter::OnCharacteMovementModeChanged(EMovementMode PrevMovementMode,
     {
         case MOVE_Walking:
         case MOVE_NavWalking:
-            MovementState = EMovementState::Grounded;
+            SetMovementState(EMovementState::Grounded);
             break;
         case MOVE_Falling:
-            MovementState = EMovementState::InAir;
+            SetMovementState(EMovementState::InAir);
             break;
         default: ;
     }
@@ -163,7 +165,7 @@ void ASGCharacter::OnRotationModeChanged(ERotationMode NewRotationMode)
             switch (ViewMode)
             {
                 case EViewMode::FirstPerson:
-                    ViewMode = EViewMode::ThirdPerson;
+                    SetViewMode(EViewMode::ThirdPerson);
                     break;
                 default: ;
             }
@@ -189,7 +191,7 @@ void ASGCharacter::OnViewModeChanged(EViewMode NewViewMode)
             {
                 case ERotationMode::VelocityDirection:
                 case ERotationMode::LookingDirection:
-                    RotationMode = DesiredRotationMode;
+                    SetRotationMode(DesiredRotationMode);
                     break;
                 default: ;
             }
@@ -198,7 +200,7 @@ void ASGCharacter::OnViewModeChanged(EViewMode NewViewMode)
             switch (RotationMode)
             {
                 case ERotationMode::VelocityDirection:
-                    RotationMode = ERotationMode::LookingDirection;
+                    SetRotationMode(ERotationMode::LookingDirection);
                     break;
                 default: ;
             }
@@ -231,7 +233,7 @@ void ASGCharacter::UpdateCharacterMovement()
     EGait ActualGait = GetActualGait(AllowedGait);
     if (ActualGait != Gait)
     {
-        Gait = ActualGait;
+        SetGait(ActualGait);
         UpdateDynamicMovementSettings(AllowedGait);
     }
 }
@@ -597,7 +599,7 @@ bool ASGCharacter::MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugT
     return true;
 }
 
-void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWS, EMantleType MantleType)
+void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWorldSpace, EMantleType MantleType)
 {
     FGSMantleAsset MantleAsset = GetMantleAsset(MantleType);
     MantleParams.AnimMontage = MantleAsset.AnimMontage;
@@ -605,6 +607,95 @@ void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& Man
     MantleParams.StartingOffset = MantleAsset.StartingOffset;
     MantleParams.StartingPosition = UKismetMathLibrary::MapRangeClamped(MantleHeight, MantleAsset.LowHeight, MantleAsset.HighHeight, MantleAsset.LowStartPosition, MantleAsset.HighStartPosition);
     MantleParams.PlayRate = UKismetMathLibrary::MapRangeClamped(MantleHeight, MantleAsset.LowHeight, MantleAsset.HighHeight, MantleAsset.LowPlayRate, MantleAsset.HighPlayRate);
+
+    {
+        UGSBlueprintLibrary::ConvertWorldToLocal(MantleLedgeWorldSpace, MantleLedgeLocalSpace);
+        MantleTarget = MantleLedgeWorldSpace.Transform;
+        MantleActualStartOffset = UGSBlueprintLibrary::TransformSubtraction(GetActorTransform(), MantleTarget);
+    }
+
+    {
+        FTransform A;
+        FVector SubVector = MantleTarget.GetRotation().Vector() * MantleParams.StartingOffset.Y;
+        SubVector.Z = MantleParams.StartingOffset.Z;
+        A.SetLocation(MantleTarget.GetLocation() - SubVector);
+        A.SetRotation(MantleTarget.GetRotation());
+        A.SetScale3D(FVector::OneVector);
+        MantleAnimatedStartOffset = UGSBlueprintLibrary::TransformSubtraction(A, MantleTarget);
+    }
+    {
+        if(auto LocalCharacterMovement = GetCharacterMovement())
+        {
+            LocalCharacterMovement->SetMovementMode(EMovementMode::MOVE_None, 0);
+        }
+        SetMovementState(EMovementState::Mantling);
+    }
+
+    {
+        if(MantleTimeline && MantleParams.PositionCorrectionCurve)
+        {
+            float MinTime;
+            float MaxTime;
+            MantleParams.PositionCorrectionCurve->GetTimeRange(MinTime, MaxTime);
+            MantleTimeline->SetTimelineLength(MaxTime - MantleParams.StartingPosition);
+            MantleTimeline->SetPlayRate(MantleParams.PlayRate);
+            MantleTimeline->PlayFromStart();
+        }
+    }
+    {
+        if(IsValid(MantleParams.AnimMontage) && MainAnimInstance)
+        {
+            MainAnimInstance->Montage_Play(MantleParams.AnimMontage, MantleParams.PlayRate, EMontagePlayReturnType::MontageLength, MantleParams.StartingPosition, false);
+        }
+    }
+}
+
+void ASGCharacter::MantleEnd()
+{
+    if(auto LocalCharacterMovement = GetCharacterMovement())
+    {
+        LocalCharacterMovement->SetMovementMode(EMovementMode::MOVE_Walking, 0);
+    }
+}
+
+void ASGCharacter::MantleUpdate(float BlendIn)
+{
+    //Step 1: Continually update the mantle target from the stored local transform to follow along with moving objects.
+    FGSComponentAndTransform MantleLedgeWorldSpace;
+    UGSBlueprintLibrary::ConvertLocalToWorld(MantleLedgeLocalSpace, MantleLedgeWorldSpace);
+    MantleTarget = MantleLedgeWorldSpace.Transform;
+
+    float PositionAlpha = 0, XYCorrectionAlpha = 0, ZCorrectionAlpha = 0;
+    //Step 2: Update the Position and Correction Alphas using the Position/Correction curve set for each Mantle.
+    if(MantleTimeline && MantleParams.PositionCorrectionCurve)
+    {
+       FVector Result = MantleParams.PositionCorrectionCurve->GetVectorValue(MantleParams.StartingPosition + MantleTimeline->GetPlaybackPosition());
+       PositionAlpha = Result.X;
+       XYCorrectionAlpha = Result.Y;
+       ZCorrectionAlpha = Result.Z;
+    }
+
+    //Step 3: Lerp multiple transforms together for independent control over the horizontal and vertical blend to the animated start position, as well as the target position.
+    FVector AnimateStartLocation = MantleAnimatedStartOffset.GetLocation();
+    FVector ActualStartLocation = MantleActualStartOffset.GetLocation();
+    float Z = AnimateStartLocation.Z;
+    AnimateStartLocation.Z = ActualStartLocation.Z;
+    ActualStartLocation.Z = Z;
+    FTransform  AnimateTransform(MantleAnimatedStartOffset.GetRotation(), AnimateStartLocation, FVector::OneVector);
+    FTransform AnimateLerp = UKismetMathLibrary::TLerp(MantleActualStartOffset, AnimateTransform, XYCorrectionAlpha);
+
+    FTransform  ActuaTransform(MantleActualStartOffset.GetRotation(), ActualStartLocation, FVector::OneVector);
+    FTransform ActualLerp = UKismetMathLibrary::TLerp(MantleActualStartOffset, ActuaTransform, ZCorrectionAlpha);
+    FVector Location = AnimateLerp.GetLocation();
+    Location.Z = ActualLerp.GetLocation().Z;
+    FTransform Result(AnimateLerp.GetRotation(), Location, FVector::OneVector);
+
+    FTransform Temp = UKismetMathLibrary::TLerp(UGSBlueprintLibrary::TransformAddition(MantleTarget, Result), MantleTarget, PositionAlpha);
+    FTransform LerpedTarget = UKismetMathLibrary::TLerp(UGSBlueprintLibrary::TransformAddition(MantleTarget, MantleActualStartOffset), Temp, BlendIn);
+
+    //Step 4: Set the actors location and rotation to the Lerped Target.
+    FHitResult SweepHitResult;
+    SetActorLocationAndRotation(LerpedTarget.GetLocation(), LerpedTarget.Rotator(), false, false, SweepHitResult);
 }
 
 bool ASGCharacter::CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector TargetLocation, float HeightOffset, float RadiusOffset, EDrawDebugTrace::Type DebugType)

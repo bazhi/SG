@@ -5,8 +5,6 @@
 
 #include "ECharacter.generated.h"
 
-#define ETraceType
-
 UENUM(BlueprintType)
 enum class EGait : uint8
 {

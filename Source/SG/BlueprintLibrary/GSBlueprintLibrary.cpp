@@ -19,3 +19,21 @@ void UGSBlueprintLibrary::ConvertLocalToWorld(const FGSComponentAndTransform& Lo
 	WorldSpaceComponent.Component = LocalSpaceComponent.Component;
 	WorldSpaceComponent.Transform = LocalSpaceComponent.Transform * LocalSpaceComponent.Component->GetComponentToWorld();
 }
+
+FTransform UGSBlueprintLibrary::TransformSubtraction(const FTransform& A, const FTransform B)
+{
+	FTransform Result;
+	Result.SetLocation(A.GetLocation() - B.GetLocation());
+	Result.SetRotation((A.Rotator() - B.Rotator()).Quaternion());
+	Result.SetScale3D(A.GetScale3D() - B.GetScale3D());
+	return  Result;
+}
+
+FTransform UGSBlueprintLibrary::TransformAddition(const FTransform& A, const FTransform B)
+{
+	FTransform Result;
+	Result.SetLocation(A.GetLocation() + B.GetLocation());
+	Result.SetRotation((A.Rotator() + B.Rotator()).Quaternion());
+	Result.SetScale3D(A.GetScale3D() + B.GetScale3D());
+	return  Result;
+}
