@@ -148,7 +148,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
     class UTimelineComponent* MantleTimeline;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "References")
+    UPROPERTY(Transient, BlueprintReadOnly, Category = "References")
     class UAnimInstance* MainAnimInstance;
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Input")
