@@ -8,11 +8,15 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/DataTableFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Kismet/KismetMathLibrary.h"
 
 #include "SG/BlueprintLibrary/GSBlueprintLibrary.h"
 
+const FName Name_RagdollPose = "RagdollPose";
+const FName Name_BoneRoot = "root";
+const FName Name_BonePelvis = "pelvis";
 
 // Sets default values
 ASGCharacter::ASGCharacter()
@@ -54,6 +58,81 @@ void ASGCharacter::OnBeginPlay()
     TargetRotation = GetActorRotation();
     LastVelocityRotation = TargetRotation;
     LastMovementInputRotation = TargetRotation;
+}
+
+void ASGCharacter::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+    Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+    OnStanceChanged(EStance::Crouching);
+}
+
+void ASGCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+    Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+    OnStanceChanged(EStance::Standing);
+}
+
+void ASGCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+    Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+    if (auto LocalCharacterMovement = GetCharacterMovement())
+    {
+        OnCharacteMovementModeChanged(PrevMovementMode, LocalCharacterMovement->MovementMode, PreviousCustomMode, LocalCharacterMovement->CustomMovementMode);
+    }
+}
+
+void ASGCharacter::OnJumped_Implementation()
+{
+    Super::OnJumped_Implementation();
+    if (Speed > 100.0f)
+    {
+        InAirRotation = LastVelocityRotation;
+    }
+    else
+    {
+        InAirRotation = GetActorRotation();
+    }
+    if (MainAnimInstance)
+    {
+        //MainAnimInstance->Jum
+    }
+}
+
+void ASGCharacter::Landed(const FHitResult& Hit)
+{
+    Super::Landed(Hit);
+    if (BreakFall)
+    {
+        BreakFallEvent();
+    }
+    else if (auto LocalCharacterMovement = GetCharacterMovement())
+    {
+        if (HasMovementInput)
+        {
+            LocalCharacterMovement->BrakingFrictionFactor = 0.5f;
+        }
+        else
+        {
+            LocalCharacterMovement->BrakingFrictionFactor = 3.0f;
+        }
+        GetWorldTimerManager().SetTimer(TimerResetBrakingFactor, this, &ASGCharacter::OnResetBrakingFrctionFactor, 0.5f, false);
+    }
+}
+
+void ASGCharacter::BreakFallEvent()
+{
+    if (MainAnimInstance)
+    {
+        MainAnimInstance->Montage_Play(GetRollAnimation(), 1.35f, EMontagePlayReturnType::MontageLength, 0, true);
+    }
+}
+
+void ASGCharacter::RollEvent()
+{
+    if (MainAnimInstance)
+    {
+        MainAnimInstance->Montage_Play(GetRollAnimation(), 1.15f, EMontagePlayReturnType::MontageLength, 0, true);
+    }
 }
 
 void ASGCharacter::OnCharacteMovementModeChanged(EMovementMode PrevMovementMode, EMovementMode NewMovementMode, uint8 PrevCustomMode, uint8 NewCustomMode)
@@ -400,6 +479,11 @@ bool ASGCharacter::CanSprint()
     return false;
 }
 
+UAnimMontage* ASGCharacter::GetRollAnimation()
+{
+    return nullptr;
+}
+
 void ASGCharacter::UpdateGroundedRotation()
 {
     if (EMovementAction::Rolling == MovementAction)
@@ -529,15 +613,16 @@ bool ASGCharacter::MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugT
     UKismetSystemLibrary::CapsuleTraceSingle(GetWorld(), Start, End, Radius, HalfHeight, TraceTypeClimbable, false, ActorsToIgnore, DebugType, HitResult, true, FColor::Yellow, FColor::Red, 1.0f);
     FVector InitialTraceImpactPoint;
     FVector InitialTraceNormal;
-    if(auto LocalCharacterMovement = GetCharacterMovement())
+    if (auto LocalCharacterMovement = GetCharacterMovement())
     {
         bool bWalkable = LocalCharacterMovement->IsWalkable(HitResult);
 
-        if(!bWalkable && HitResult.bBlockingHit && !HitResult.bStartPenetrating)
+        if (!bWalkable && HitResult.bBlockingHit && !HitResult.bStartPenetrating)
         {
             InitialTraceImpactPoint = HitResult.ImpactPoint;
             InitialTraceNormal = HitResult.ImpactNormal;
-        }else
+        }
+        else
         {
             return false;
         }
@@ -554,17 +639,18 @@ bool ASGCharacter::MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugT
     if (auto LocalCharacterMovement = GetCharacterMovement())
     {
         bool bWalkable = LocalCharacterMovement->IsWalkable(HitResult);
-        if(bWalkable && HitResult.bBlockingHit)
+        if (bWalkable && HitResult.bBlockingHit)
         {
             DownTraceLocation = FVector(HitResult.Location.X, HitResult.Location.Y, HitResult.ImpactPoint.Z);
             HitComponent = HitResult.Component.Get();
-        }else
+        }
+        else
         {
             return false;
         }
     }
     FVector TargetLocation = GetCapsuleLocationFromBase(DownTraceLocation, 2.0f);
-    if(!CapsuleHasRoomCheck(GetCapsuleComponent(), TargetLocation, 0, 0, DebugType))
+    if (!CapsuleHasRoomCheck(GetCapsuleComponent(), TargetLocation, 0, 0, DebugType))
     {
         return false;
     }
@@ -579,10 +665,11 @@ bool ASGCharacter::MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugT
         case EMovementState::Grounded:
         case EMovementState::Mantling:
         case EMovementState::Ragdoll:
-            if(MantleHeight > 125.0f)
+            if (MantleHeight > 125.0f)
             {
                 MantleType = EMantleType::HighMantle;
-            }else
+            }
+            else
             {
                 MantleType = EMantleType::LowMantle;
             }
@@ -624,7 +711,7 @@ void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& Man
         MantleAnimatedStartOffset = UGSBlueprintLibrary::TransformSubtraction(A, MantleTarget);
     }
     {
-        if(auto LocalCharacterMovement = GetCharacterMovement())
+        if (auto LocalCharacterMovement = GetCharacterMovement())
         {
             LocalCharacterMovement->SetMovementMode(EMovementMode::MOVE_None, 0);
         }
@@ -632,7 +719,7 @@ void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& Man
     }
 
     {
-        if(MantleTimeline && MantleParams.PositionCorrectionCurve)
+        if (MantleTimeline && MantleParams.PositionCorrectionCurve)
         {
             float MinTime;
             float MaxTime;
@@ -643,7 +730,7 @@ void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& Man
         }
     }
     {
-        if(IsValid(MantleParams.AnimMontage) && MainAnimInstance)
+        if (IsValid(MantleParams.AnimMontage) && MainAnimInstance)
         {
             MainAnimInstance->Montage_Play(MantleParams.AnimMontage, MantleParams.PlayRate, EMontagePlayReturnType::MontageLength, MantleParams.StartingPosition, false);
         }
@@ -652,7 +739,7 @@ void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& Man
 
 void ASGCharacter::MantleEnd()
 {
-    if(auto LocalCharacterMovement = GetCharacterMovement())
+    if (auto LocalCharacterMovement = GetCharacterMovement())
     {
         LocalCharacterMovement->SetMovementMode(EMovementMode::MOVE_Walking, 0);
     }
@@ -667,12 +754,12 @@ void ASGCharacter::MantleUpdate(float BlendIn)
 
     float PositionAlpha = 0, XYCorrectionAlpha = 0, ZCorrectionAlpha = 0;
     //Step 2: Update the Position and Correction Alphas using the Position/Correction curve set for each Mantle.
-    if(MantleTimeline && MantleParams.PositionCorrectionCurve)
+    if (MantleTimeline && MantleParams.PositionCorrectionCurve)
     {
-       FVector Result = MantleParams.PositionCorrectionCurve->GetVectorValue(MantleParams.StartingPosition + MantleTimeline->GetPlaybackPosition());
-       PositionAlpha = Result.X;
-       XYCorrectionAlpha = Result.Y;
-       ZCorrectionAlpha = Result.Z;
+        FVector Result = MantleParams.PositionCorrectionCurve->GetVectorValue(MantleParams.StartingPosition + MantleTimeline->GetPlaybackPosition());
+        PositionAlpha = Result.X;
+        XYCorrectionAlpha = Result.Y;
+        ZCorrectionAlpha = Result.Z;
     }
 
     //Step 3: Lerp multiple transforms together for independent control over the horizontal and vertical blend to the animated start position, as well as the target position.
@@ -681,10 +768,10 @@ void ASGCharacter::MantleUpdate(float BlendIn)
     float Z = AnimateStartLocation.Z;
     AnimateStartLocation.Z = ActualStartLocation.Z;
     ActualStartLocation.Z = Z;
-    FTransform  AnimateTransform(MantleAnimatedStartOffset.GetRotation(), AnimateStartLocation, FVector::OneVector);
+    FTransform AnimateTransform(MantleAnimatedStartOffset.GetRotation(), AnimateStartLocation, FVector::OneVector);
     FTransform AnimateLerp = UKismetMathLibrary::TLerp(MantleActualStartOffset, AnimateTransform, XYCorrectionAlpha);
 
-    FTransform  ActuaTransform(MantleActualStartOffset.GetRotation(), ActualStartLocation, FVector::OneVector);
+    FTransform ActuaTransform(MantleActualStartOffset.GetRotation(), ActualStartLocation, FVector::OneVector);
     FTransform ActualLerp = UKismetMathLibrary::TLerp(MantleActualStartOffset, ActuaTransform, ZCorrectionAlpha);
     FVector Location = AnimateLerp.GetLocation();
     Location.Z = ActualLerp.GetLocation().Z;
@@ -700,37 +787,428 @@ void ASGCharacter::MantleUpdate(float BlendIn)
 
 bool ASGCharacter::CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector TargetLocation, float HeightOffset, float RadiusOffset, EDrawDebugTrace::Type DebugType)
 {
+    if (Capsule)
+    {
+        float HalfHeight = Capsule->GetScaledCapsuleHalfHeight_WithoutHemisphere();
+        float Z = HalfHeight - RadiusOffset + HeightOffset;
+        float Radius = Capsule->GetUnscaledCapsuleRadius() + RadiusOffset;
+
+        FVector Start = TargetLocation + FVector(0, 0, Z);
+        FVector End = TargetLocation - FVector(0, 0, Z);
+        TArray<AActor*> ActorIgnore;
+        FHitResult HitResult;
+        UKismetSystemLibrary::SphereTraceSingleByProfile(this, Start, End, Radius, "GS_Character", false, ActorIgnore, GetTraceDebugType(DebugType), HitResult, true, FColor::Green, FColor::Purple, 1.0f);
+
+        return UKismetMathLibrary::BooleanNOR(HitResult.bBlockingHit, HitResult.bStartPenetrating);
+    }
     return true;
 }
 
 FGSMantleAsset ASGCharacter::GetMantleAsset(EMantleType MantleType)
 {
+    if (auto FindItem = MantleAssetMap.Find(MantleType))
+    {
+        return *FindItem;
+    }
     return FGSMantleAsset();
 }
 
 void ASGCharacter::RagdollStart()
 {
+    if (auto LocalCharacterMovement = GetCharacterMovement())
+    {
+        LocalCharacterMovement->SetMovementMode(EMovementMode::MOVE_None, 0);
+        SetMovementState(EMovementState::Ragdoll);
+
+        if (auto LocalCapsuleComponent = GetCapsuleComponent())
+        {
+            LocalCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        }
+        if (auto LocalMesh = GetMesh())
+        {
+            LocalMesh->SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
+            LocalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            LocalMesh->SetAllBodiesBelowSimulatePhysics(UKismetSystemLibrary::MakeLiteralName(Name_BonePelvis), true, true);
+        }
+        if (MainAnimInstance)
+        {
+            MainAnimInstance->Montage_Stop(0.2f);
+        }
+    }
+}
+
+void ASGCharacter::RagdollEnd()
+{
+    if (MainAnimInstance)
+    {
+        MainAnimInstance->SavePoseSnapshot(Name_RagdollPose);
+    }
+    if (auto LocalCharacterMovement = GetCharacterMovement())
+    {
+        if (RagdollOnGround)
+        {
+            LocalCharacterMovement->SetMovementMode(EMovementMode::MOVE_Walking, 0);
+            if (MainAnimInstance)
+            {
+                MainAnimInstance->Montage_Play(GetUpAnimation(RagdollFaceUp), 1.0f, EMontagePlayReturnType::MontageLength, 0, true);
+            }
+        }
+        else
+        {
+            LocalCharacterMovement->SetMovementMode(EMovementMode::MOVE_Falling, 0);
+            LocalCharacterMovement->Velocity = LastRagdollVelocity;
+        }
+    }
+    if (auto LocalCapsuleComponent = GetCapsuleComponent())
+    {
+        LocalCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        if (auto LocalMesh = GetMesh())
+        {
+            LocalMesh->SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
+            LocalMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+            LocalMesh->SetAllBodiesSimulatePhysics(false);
+        }
+    }
+}
+
+void ASGCharacter::RagdollUpdate()
+{
+    if (auto LocalMesh = GetMesh())
+    {
+        LastRagdollVelocity = LocalMesh->GetPhysicsLinearVelocity(Name_BoneRoot);
+        float InSpring = UKismetMathLibrary::MapRangeClamped(LastRagdollVelocity.Size(), 0.f, 1000.f, 0.f, 25000.f);
+        LocalMesh->SetAllMotorsAngularDriveParams(InSpring, 0, 0, false);
+        LocalMesh->SetEnableGravity(LastRagdollVelocity.Z > -4000.f);
+    }
+    SetActorLocationDuringRagdoll();
+}
+
+void ASGCharacter::SetActorLocationDuringRagdoll()
+{
+    if (auto LocalMesh = GetMesh())
+    {
+        FVector TargetRagdollLocation = LocalMesh->GetSocketLocation(Name_BonePelvis);
+        FRotator TargetRagdollRotation = LocalMesh->GetSocketRotation(Name_BonePelvis);
+        RagdollFaceUp = TargetRagdollRotation.Roll < 0;
+        if (RagdollFaceUp)
+        {
+            TargetRagdollRotation = FRotator(0, TargetRagdollRotation.Yaw - 180, 0);
+        }
+        else
+        {
+            TargetRagdollRotation = FRotator(0, TargetRagdollRotation.Yaw, 0);
+        }
+
+        if (auto LocalCapsuleComponent = GetCapsuleComponent())
+        {
+            float HalfHeight = LocalCapsuleComponent->GetScaledCapsuleHalfHeight();
+            FVector End = TargetRagdollLocation;
+            End.Z -= HalfHeight;
+            TArray<AActor*> IgnoreActors;
+            FHitResult HitResult;
+            UKismetSystemLibrary::LineTraceSingle(this, TargetRagdollLocation, End, TraceTypeRagdoll, false, IgnoreActors, EDrawDebugTrace::None, HitResult, true, FColor::Yellow, FColor::Yellow, 0);
+            RagdollOnGround = HitResult.bBlockingHit;
+            if (RagdollOnGround)
+            {
+                FVector Location = TargetRagdollLocation;
+                Location.Z += HalfHeight - FMath::Abs(HitResult.ImpactPoint.Z - HitResult.TraceStart.Z);
+                Location.Z += 2.0f;
+                FHitResult SweepHitResult;
+                SetActorLocationAndRotation(Location, TargetRagdollRotation, false, false, SweepHitResult);
+            }
+            else
+            {
+                FHitResult SweepHitResult;
+                SetActorLocationAndRotation(TargetRagdollLocation, TargetRagdollRotation, false, false, SweepHitResult);
+            }
+        }
+    }
+}
+
+UAnimMontage* ASGCharacter::GetUpAnimation(bool bRagdollFaceUp)
+{
+    return nullptr;
+}
+
+void ASGCharacter::DrawDebugShapes()
+{
+    if (auto PlayerController = UGameplayStatics::GetPlayerController(this, 0))
+    {
+    }
 }
 
 EDrawDebugTrace::Type ASGCharacter::GetTraceDebugType(EDrawDebugTrace::Type DebugType)
 {
-    if(IsLocallyControlled())
+    if (IsLocallyControlled())
     {
         return DebugType;
     }
     return EDrawDebugTrace::None;
 }
 
+void ASGCharacter::SetMovementState(EMovementState NewMovementState)
+{
+    if (MovementState != NewMovementState)
+    {
+        OnMovementStateChanged(NewMovementState);
+    }
+}
+
+void ASGCharacter::SetMovementAction(EMovementAction NewMovementAction)
+{
+    if (MovementAction != NewMovementAction)
+    {
+        OnMovementActionChanged(NewMovementAction);
+    }
+}
+
+void ASGCharacter::SetRotationMode(ERotationMode NewRotationMode)
+{
+    if (RotationMode != NewRotationMode)
+    {
+        OnRotationModeChanged(NewRotationMode);
+    }
+}
+
+void ASGCharacter::SetGait(EGait NewGait)
+{
+    if (Gait != NewGait)
+    {
+        OnGaitChanged(NewGait);
+    }
+}
+
+void ASGCharacter::SetViewMode(EViewMode NewViewMode)
+{
+    if (ViewMode != NewViewMode)
+    {
+        OnViewModeChanged(NewViewMode);
+    }
+}
+
+void ASGCharacter::SetOverlayState(EOverlayState NewOverlayState)
+{
+    if (OverlayState != NewOverlayState)
+    {
+        OnOverlayStateChanged(NewOverlayState);
+    }
+}
+
+void ASGCharacter::OnResetBrakingFrctionFactor()
+{
+    GetWorldTimerManager().ClearTimer(TimerResetBrakingFactor);
+    if (auto LocalCharacterMovement = GetCharacterMovement())
+    {
+        LocalCharacterMovement->BrakingFrictionFactor = 0.0f;
+    }
+}
+
+void ASGCharacter::OnMoveForward(float Val)
+{
+    PlayerMovementInput(true);
+}
+
+void ASGCharacter::OnMoveRight(float Val)
+{
+    PlayerMovementInput(false);
+}
+
+void ASGCharacter::OnLookUp(float Val)
+{
+    AddControllerPitchInput(LookUpDownRate * Val);
+}
+
+void ASGCharacter::OnLookRight(float Val)
+{
+    AddControllerYawInput(LookLeftRightRate * Val);
+}
+
+void ASGCharacter::OnJumpPressed()
+{
+    if (EMovementAction::None == MovementAction)
+    {
+        switch (MovementState)
+        {
+            case EMovementState::None:
+                break;
+            case EMovementState::Grounded:
+                if (HasMovementInput)
+                {
+                   if(MantleCheck(FallingTraceSettings, EDrawDebugTrace::ForDuration))
+                   {
+                       return;
+                   }
+                }
+                switch (Stance)
+                {
+                    case EStance::Standing:
+                        Jump();
+                        break;
+                    case EStance::Crouching:
+                        UnCrouch();
+                        break;
+                    default: ;
+                }
+                break;
+            case EMovementState::InAir:
+                MantleCheck(FallingTraceSettings, EDrawDebugTrace::ForDuration);
+                break;
+            case EMovementState::Mantling:
+                break;
+            case EMovementState::Ragdoll:
+                RagdollEnd();
+                break;
+            default: ;
+        }
+    }
+}
+
+void ASGCharacter::OnJumpReleased()
+{
+    StopJumping();
+}
+
+void ASGCharacter::OnWalkPressed()
+{
+    switch (DesiredGait)
+    {
+        case EGait::Walking:
+            DesiredGait = EGait::Running;
+            break;
+        case EGait::Running:
+            DesiredGait = EGait::Walking;
+            break;
+        case EGait::Sprinting:
+            break;
+        default: ;
+    }
+}
+
+void ASGCharacter::OnSelectRotationMode1Pressed()
+{
+    DesiredRotationMode = ERotationMode::VelocityDirection;
+    SetRotationMode(DesiredRotationMode);
+}
+
+void ASGCharacter::OnSelectRotationMode2Pressed()
+{
+    DesiredRotationMode = ERotationMode::LookingDirection;
+    SetRotationMode(DesiredRotationMode);
+}
+
+void ASGCharacter::OnAimPressed()
+{
+    SetRotationMode(ERotationMode::Aiming);
+}
+
+void ASGCharacter::OnAimReleased()
+{
+    switch (ViewMode)
+    {
+        case EViewMode::ThirdPerson:
+            SetRotationMode(DesiredRotationMode);
+            break;
+        case EViewMode::FirstPerson:
+            SetRotationMode(ERotationMode::LookingDirection);
+            break;
+        default: ;
+    }
+}
+
+void ASGCharacter::OnStancePressed()
+{
+
+}
+
+void ASGCharacter::OnCameraPressed()
+{
+
+}
+
+void ASGCharacter::OnCameraReleased()
+{
+}
+
+void ASGCharacter::OnSprintPressed()
+{
+    DesiredGait = EGait::Sprinting;
+}
+
+void ASGCharacter::OnSprintReleased()
+{
+    DesiredGait = EGait::Running;
+}
+
+void ASGCharacter::OnRagdollPressed()
+{
+    if(EMovementState::Ragdoll == MovementState)
+    {
+        RagdollEnd();
+    }else
+    {
+        RagdollStart();
+    }
+}
+
 // Called every frame
 void ASGCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    SetEssentialValues();
+    switch (MovementState)
+    {
+        case EMovementState::Grounded:
+            UpdateCharacterMovement();
+            UpdateGroundedRotation();
+            break;
+        case EMovementState::InAir:
+            UpdateInAirRotation();
+            if (HasMovementInput)
+            {
+                MantleCheck(FallingTraceSettings, EDrawDebugTrace::ForOneFrame);
+            }
+            break;
+        case EMovementState::Ragdoll:
+            RagdollUpdate();
+            break;
+        default: ;
+    }
+
+    CacheValues();
+    DrawDebugShapes();
 }
 
 // Called to bind functionality to input
 void ASGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+    if (PlayerInputComponent)
+    {
+        PlayerInputComponent->BindAxis(GSInputName::MoveForwardBackward, this, &ASGCharacter::OnMoveForward);
+        PlayerInputComponent->BindAxis(GSInputName::MoveRightLeft, this, &ASGCharacter::OnMoveRight);
+        PlayerInputComponent->BindAxis(GSInputName::LookUpDown, this, &ASGCharacter::OnLookUp);
+        PlayerInputComponent->BindAxis(GSInputName::LookLeftRight, this, &ASGCharacter::OnLookRight);
+
+        PlayerInputComponent->BindAction(GSInputName::JumpAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnJumpPressed);
+        PlayerInputComponent->BindAction(GSInputName::JumpAction, EInputEvent::IE_Released, this, &ASGCharacter::OnJumpReleased);
+        PlayerInputComponent->BindAction(GSInputName::WalkAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnWalkPressed);
+        PlayerInputComponent->BindAction(GSInputName::SelectRotationMode_1, EInputEvent::IE_Pressed, this, &ASGCharacter::OnSelectRotationMode1Pressed);
+        PlayerInputComponent->BindAction(GSInputName::SelectRotationMode_2, EInputEvent::IE_Pressed, this, &ASGCharacter::OnSelectRotationMode2Pressed);
+
+        PlayerInputComponent->BindAction(GSInputName::AimAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnAimPressed);
+        PlayerInputComponent->BindAction(GSInputName::AimAction, EInputEvent::IE_Released, this, &ASGCharacter::OnAimReleased);
+
+        PlayerInputComponent->BindAction(GSInputName::StanceAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnStancePressed);
+
+        PlayerInputComponent->BindAction(GSInputName::CameraAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnCameraPressed);
+        PlayerInputComponent->BindAction(GSInputName::CameraAction, EInputEvent::IE_Released, this, &ASGCharacter::OnCameraReleased);
+
+        PlayerInputComponent->BindAction(GSInputName::SprintAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnSprintPressed);
+        PlayerInputComponent->BindAction(GSInputName::SprintAction, EInputEvent::IE_Released, this, &ASGCharacter::OnSprintReleased);
+
+        PlayerInputComponent->BindAction(GSInputName::RagdollAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnRagdollPressed);
+    }
 }
 
 void ASGCharacter::GetControlForwardAndRightVector(FVector& Forward, FVector& Right)
