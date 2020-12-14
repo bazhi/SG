@@ -52,6 +52,9 @@ public:
     {
         DynamicLoadTables.Empty();
     };
+
+private:
+    FString ContextString = TEXT("UConfigManager");
 };
 
 template <class T>
@@ -101,7 +104,7 @@ const T* UConfigManager::GetDataTableRow(const T& Item)
 {
     if (const UDataTable* DataTable = GetDataTable<T>())
     {
-        return DataTable->FindRow<T>(Item.GetRowName());
+        return DataTable->FindRow<T>(Item.GetRowName(), ContextString);
     }
     return nullptr;
 }

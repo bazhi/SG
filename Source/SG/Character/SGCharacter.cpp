@@ -13,6 +13,9 @@
 #include "Kismet/KismetMathLibrary.h"
 
 #include "SG/BlueprintLibrary/GSBlueprintLibrary.h"
+#include "SG/DataAsset/ConfigManager.h"
+#include "SG/DataAsset/TableRowDefine.h"
+#include "SG/GameInstance/SGGameInstance.h"
 
 const FName Name_RagdollPose = "RagdollPose";
 const FName Name_BoneRoot = "root";
@@ -479,8 +482,19 @@ bool ASGCharacter::CanSprint()
     return false;
 }
 
-UAnimMontage* ASGCharacter::GetRollAnimation()
+UAnimMontage* ASGCharacter::GetRollAnimation() const
 {
+    FDTRowOverlayState Query;
+    Query.ID = OverlayState;
+
+    if(UConfigManager* Manager = GetConfigManager())
+    {
+       const FDTRowOverlayState* Result = Manager->GetDataTableRow(Query);
+        if(Result)
+        {
+            return Result->AnimMontageRoll.LoadSynchronous();
+        }
+    }
     return nullptr;
 }
 

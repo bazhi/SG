@@ -9,6 +9,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 
+
+#include "SG/GameInstance/SGGameInstance.h"
 #include "SG/Interface/GSCameraInterface.h"
 #include "SG/Interface/GSCharacterInterface.h"
 
@@ -34,6 +36,16 @@ public:
 
     // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+    class UConfigManager* GetConfigManager() const
+    {
+        if (USGGameInstance* SGGameInstance = Cast<USGGameInstance>(GetGameInstance()))
+        {
+           return  SGGameInstance->GetConfigManager();
+        }
+        return nullptr;
+    }
+
 protected:
 
 
@@ -72,7 +84,7 @@ protected:
     EGait GetAllowedGait();
     EGait GetActualGait(EGait AllowedGait);
     bool CanSprint();
-    UAnimMontage* GetRollAnimation();
+    UAnimMontage* GetRollAnimation() const;
 
     //Rotation System
     void UpdateGroundedRotation();
