@@ -6,7 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "TableRowDefine.generated.h"
 
-const FName RowNameNull = FName();
+const FName RowNameNull = "";
 
 USTRUCT()
 struct FDataTableRow : public FTableRowBase
@@ -28,7 +28,7 @@ struct FDataTableRowOne : public FDataTableRow
 public:
     virtual FName GetRowName() const override
     {
-        FName Result;
+        FName Result = "K";
         Result.SetNumber(ID);
         return Result;
     }
@@ -46,7 +46,7 @@ struct FDataTableRowTwo : public FDataTableRow
 public:
     virtual FName GetRowName() const override
     {
-        FName Result;
+        FName Result = "K";
         uint32 ID32 = ID;
         Result.SetNumber((ID32 << 8) + SubID);
         return Result;
@@ -67,7 +67,7 @@ struct FDTRowOverlayState : public FDataTableRow
 public:
     virtual FName GetRowName() const override
     {
-        FName Result;
+        FName Result = "K";
         Result.SetNumber((uint8)ID);
         return Result;
     }
