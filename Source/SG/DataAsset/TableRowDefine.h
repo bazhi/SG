@@ -14,7 +14,7 @@ struct FDataTableRow : public FTableRowBase
     GENERATED_BODY()
 
 public:
-    virtual FName GetRowName()
+    virtual FName GetRowName() const
     {
         return RowNameNull;
     }
@@ -26,7 +26,7 @@ struct FDataTableRowOne : public FDataTableRow
     GENERATED_BODY()
 
 public:
-    virtual FName GetRowName() override
+    virtual FName GetRowName() const override
     {
         FName Result;
         Result.SetNumber(ID);
@@ -44,7 +44,7 @@ struct FDataTableRowTwo : public FDataTableRow
     GENERATED_BODY()
 
 public:
-    virtual FName GetRowName() override
+    virtual FName GetRowName() const override
     {
         FName Result;
         uint32 ID32 = ID;
@@ -65,7 +65,7 @@ struct FDTRowOverlayState : public FDataTableRow
     GENERATED_BODY()
 
 public:
-    virtual FName GetRowName() override
+    virtual FName GetRowName() const override
     {
         FName Result;
         Result.SetNumber((uint8)ID);
