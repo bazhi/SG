@@ -47,13 +47,43 @@ bool UGSBlueprintLibrary::RenameRowsName(UDataTable* DataTable)
     {
         TMap<FName, uint8*> RowMap = DataTable->GetRowMap();
         DataTable->Modify();
+        RowMap = DataTable->GetRowMap();
         for (TMap<FName, uint8*>::TConstIterator RowMapIter(RowMap); RowMapIter; ++RowMapIter)
         {
             FTableRowBase* Entry = reinterpret_cast<FTableRowBase*>(RowMapIter.Value());
             if (auto Row = static_cast<FDataTableRow*>(Entry))
             {
                 FName NewName = Row->GetRowName();
-                if(!DataTable->GetRowMap().Find(NewName) && NewName != RowMapIter.Key())
+                if (!DataTable->GetRowMap().Find(NewName))
+                {
+                    DataTable->RemoveRow(RowMapIter.Key());
+                    DataTable->AddRow(NewName, *Row);
+                }
+            }
+        }
+    }
+#endif
+    return true;
+}
+
+bool UGSBlueprintLibrary::RenameRowsNameTemp(UDataTable* DataTable)
+{
+#if WITH_EDITOR
+    if (DataTable)
+    {
+        TMap<FName, uint8*> RowMap = DataTable->GetRowMap();
+        DataTable->Modify();
+        int i = 1;
+        FName TempName = "Temp";
+        for (TMap<FName, uint8*>::TConstIterator RowMapIter(RowMap); RowMapIter; ++RowMapIter)
+        {
+            FTableRowBase* Entry = reinterpret_cast<FTableRowBase*>(RowMapIter.Value());
+            if (auto Row = static_cast<FDataTableRow*>(Entry))
+            {
+                FName NewName = TempName;
+                NewName.SetNumber(i);
+                ++i;
+                if (!DataTable->GetRowMap().Find(NewName))
                 {
                     DataTable->RemoveRow(RowMapIter.Key());
                     DataTable->AddRow(NewName, *Row);

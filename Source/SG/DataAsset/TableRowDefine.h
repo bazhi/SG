@@ -76,6 +76,10 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Base ID")
     EOverlayState ID = EOverlayState::Default;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Base ID")
+    UPROPERTY(EditDefaultsOnly, Category = "AnimMontage")
     TSoftObjectPtr<UAnimMontage> AnimMontageRoll;
+    UPROPERTY(EditDefaultsOnly, Category = "AnimMontage")
+    TSoftObjectPtr<UAnimMontage> AnimMontageFrontUp;
+    UPROPERTY(EditDefaultsOnly, Category = "AnimMontage")
+    TSoftObjectPtr<UAnimMontage> AnimMontageBackUp;
 };

@@ -489,10 +489,10 @@ UAnimMontage* ASGCharacter::GetRollAnimation() const
 
     if(UConfigManager* Manager = GetConfigManager())
     {
-       const FDTRowOverlayState* Result = Manager->GetDataTableRow(Query);
+       FDTRowOverlayState* Result = Manager->GetDataTableRow(Query);
         if(Result)
         {
-            return Result->AnimMontageRoll.LoadSynchronous();
+            return Manager->GetCacheable(Result->AnimMontageRoll);
         }
     }
     return nullptr;
@@ -941,6 +941,24 @@ void ASGCharacter::SetActorLocationDuringRagdoll()
 
 UAnimMontage* ASGCharacter::GetUpAnimation(bool bRagdollFaceUp)
 {
+    FDTRowOverlayState Query;
+    Query.ID = OverlayState;
+
+    if (UConfigManager* Manager = GetConfigManager())
+    {
+        FDTRowOverlayState* Result = Manager->GetDataTableRow(Query);
+        if (Result)
+        {
+            if(bRagdollFaceUp)
+            {
+                return Manager->GetCacheable(Result->AnimMontageBackUp);
+            }else
+            {
+                return Manager->GetCacheable(Result->AnimMontageFrontUp);
+            }
+
+        }
+    }
     return nullptr;
 }
 

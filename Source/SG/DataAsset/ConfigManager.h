@@ -32,33 +32,53 @@ protected:
     UPROPERTY(VisibleDefaultsOnly, Category = "Configs")
     TMap<const UScriptStruct*, TSoftObjectPtr<UDataTable>> DynamicLoadMap;
 
+private:
     UPROPERTY(Transient)
     TMap<const UScriptStruct*, UDataTable*> PreLoadTables;
     UPROPERTY(Transient)
     TMap<const UScriptStruct*, UDataTable*> DynamicLoadTables;
+    UPROPERTY(Transient)
+    TSet<UObject*> CachedObjects;
+protected:
 #if WITH_EDITORONLY_DATA
     virtual void PreSave(const ITargetPlatform* TargetPlatform) override;
 #endif
 public:
     void OnStartupLoad();
 
-    template <class T>
-    const UDataTable* GetDataTable();
+    template <class T=FDataTableRow>
+    UDataTable* GetDataTable();
 
-    template <class T>
-    const T* GetDataTableRow(const T& Item);
+    template <class T=FDataTableRow>
+    T* GetDataTableRow(const T& Item);
 
     void EmptyDynamicTables()
     {
         DynamicLoadTables.Empty();
     };
 
+    template <class T= TSoftObjectPtr<UObject>>
+    T* GetCacheable(TSoftObjectPtr<T>& Item)
+    {
+        if (auto Object = Item.Get())
+        {
+            return Object;
+        }
+
+        if (auto Object = Item.LoadSynchronous())
+        {
+            CachedObjects.Add(Object);
+            return Object;
+        }
+        return nullptr;
+    }
+
 private:
     FString ContextString = TEXT("UConfigManager");
 };
 
 template <class T>
-const UDataTable* UConfigManager::GetDataTable()
+ UDataTable* UConfigManager::GetDataTable()
 {
     UScriptStruct* RowStruct = T::StaticStruct();
     if (RowStruct)
@@ -99,12 +119,14 @@ const UDataTable* UConfigManager::GetDataTable()
     return nullptr;
 }
 
-template <class T>
-const T* UConfigManager::GetDataTableRow(const T& Item)
-{
-    if (const UDataTable* DataTable = GetDataTable<T>())
-    {
-        return DataTable->FindRow<T>(Item.GetRowName(), ContextString);
-    }
-    return nullptr;
-}
+ template <class T>
+ T* UConfigManager::GetDataTableRow(const T& Item)
+ {
+     if (const UDataTable* DataTable = GetDataTable<T>())
+     {
+         return DataTable->FindRow<T>(Item.GetRowName(), ContextString);
+     }
+     return nullptr;
+ }
+
+

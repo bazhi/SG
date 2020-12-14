@@ -22,4 +22,6 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "DataTable")
     static bool RenameRowsName(UDataTable* DataTable);
+    UFUNCTION(BlueprintCallable, Category = "DataTable")
+    static bool RenameRowsNameTemp(UDataTable* DataTable);
 };
