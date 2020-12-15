@@ -10,6 +10,7 @@
 
 
 
+#include "SG/DataAsset/DAssetMantle.h"
 #include "SG/GameInstance/SGGameInstance.h"
 #include "SG/Interface/GSCameraInterface.h"
 #include "SG/Interface/GSCharacterInterface.h"
@@ -102,7 +103,7 @@ protected:
     void MantleEnd();
     void MantleUpdate(float BlendIn);
     bool CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector TargetLocation, float HeightOffset, float RadiusOffset, EDrawDebugTrace::Type DebugType);
-    FGSMantleAsset GetMantleAsset(EMantleType MantleType);
+    const UDAssetMantle* GetMantleAsset(EMantleType MantleType) const;
 
     //RagdollSystem
     void RagdollStart();
@@ -252,7 +253,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
     FGSMantleTraceSettings FallingTraceSettings;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
-    TMap<EMantleType, FGSMantleAsset> MantleAssetMap;
+    TMap<EMantleType, UDAssetMantle*> MantleAssetMap;
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Ragdoll System")
     bool RagdollOnGround = false;

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DAssetMantle.h"
+
 #include "Engine/DataTable.h"
 #include "SG/Character/ECharacter.h"
 #include "UObject/NoExportTypes.h"
@@ -84,4 +86,9 @@ public:
     TSoftObjectPtr<UAnimMontage> AnimMontageFrontUp;
     UPROPERTY(EditDefaultsOnly, Category = "AnimMontage")
     TSoftObjectPtr<UAnimMontage> AnimMontageBackUp;
+
+    UPROPERTY(EditDefaultsOnly, Category = "AnimMontage")
+    TSoftObjectPtr<UDAssetMantle> AssetMantleDefault;
+    UPROPERTY(EditDefaultsOnly, Category = "AnimMontage")
+    TMap<EMantleType, TSoftObjectPtr<UDAssetMantle>> AssetMantleMap;
 };

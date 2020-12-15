@@ -702,12 +702,16 @@ bool ASGCharacter::MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugT
 
 void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWorldSpace, EMantleType MantleType)
 {
-    FGSMantleAsset MantleAsset = GetMantleAsset(MantleType);
-    MantleParams.AnimMontage = MantleAsset.AnimMontage;
-    MantleParams.PositionCorrectionCurve = MantleAsset.PositionCorrectionCurve;
-    MantleParams.StartingOffset = MantleAsset.StartingOffset;
-    MantleParams.StartingPosition = UKismetMathLibrary::MapRangeClamped(MantleHeight, MantleAsset.LowHeight, MantleAsset.HighHeight, MantleAsset.LowStartPosition, MantleAsset.HighStartPosition);
-    MantleParams.PlayRate = UKismetMathLibrary::MapRangeClamped(MantleHeight, MantleAsset.LowHeight, MantleAsset.HighHeight, MantleAsset.LowPlayRate, MantleAsset.HighPlayRate);
+    const UDAssetMantle* MantleAsset = GetMantleAsset(MantleType);
+    if(nullptr == MantleAsset)
+    {
+        return;
+    }
+    MantleParams.AnimMontage = MantleAsset->AnimMontage;
+    MantleParams.PositionCorrectionCurve = MantleAsset->PositionCorrectionCurve;
+    MantleParams.StartingOffset = MantleAsset->StartingOffset;
+    MantleParams.StartingPosition = UKismetMathLibrary::MapRangeClamped(MantleHeight, MantleAsset->LowHeight, MantleAsset->HighHeight, MantleAsset->LowStartPosition, MantleAsset->HighStartPosition);
+    MantleParams.PlayRate = UKismetMathLibrary::MapRangeClamped(MantleHeight, MantleAsset->LowHeight, MantleAsset->HighHeight, MantleAsset->LowPlayRate, MantleAsset->HighPlayRate);
 
     {
         UGSBlueprintLibrary::ConvertWorldToLocal(MantleLedgeWorldSpace, MantleLedgeLocalSpace);
@@ -818,13 +822,13 @@ bool ASGCharacter::CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector Targe
     return true;
 }
 
-FGSMantleAsset ASGCharacter::GetMantleAsset(EMantleType MantleType)
+const UDAssetMantle* ASGCharacter::GetMantleAsset(EMantleType MantleType) const
 {
-    if (auto FindItem = MantleAssetMap.Find(MantleType))
+    if (auto FindItem = MantleAssetMap.FindRef(MantleType))
     {
-        return *FindItem;
+        return FindItem;
     }
-    return FGSMantleAsset();
+    return nullptr;
 }
 
 void ASGCharacter::RagdollStart()
