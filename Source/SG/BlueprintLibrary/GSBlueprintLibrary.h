@@ -19,9 +19,4 @@ public:
 
     static FTransform TransformSubtraction(const FTransform& A, const FTransform B);
     static FTransform TransformAddition(const FTransform& A, const FTransform B);
-
-    UFUNCTION(BlueprintCallable, Category = "DataTable")
-    static bool RenameRowsName(UDataTable* DataTable);
-    UFUNCTION(BlueprintCallable, Category = "DataTable")
-    static bool RenameRowsNameTemp(UDataTable* DataTable);
 };

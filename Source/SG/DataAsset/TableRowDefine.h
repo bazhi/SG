@@ -8,6 +8,8 @@
 
 const FName RowNameNull = "";
 
+const uint8 NameBaseNumber = 1;
+
 USTRUCT()
 struct FDataTableRow : public FTableRowBase
 {
@@ -29,7 +31,7 @@ public:
     virtual FName GetRowName() const override
     {
         FName Result = "K";
-        Result.SetNumber(ID);
+        Result.SetNumber(ID + NameBaseNumber);
         return Result;
     }
 
@@ -48,7 +50,7 @@ public:
     {
         FName Result = "K";
         uint32 ID32 = ID;
-        Result.SetNumber((ID32 << 8) + SubID);
+        Result.SetNumber((ID32 << 8) + SubID + NameBaseNumber);
         return Result;
     }
 
@@ -68,7 +70,7 @@ public:
     virtual FName GetRowName() const override
     {
         FName Result = "K";
-        Result.SetNumber((uint8)ID);
+        Result.SetNumber((uint8)ID + NameBaseNumber);
         return Result;
     }
 

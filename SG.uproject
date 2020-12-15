@@ -12,7 +12,16 @@
 				"Engine",
 				"CoreUObject"
 			]
-		}
+		},
+        {
+            "Name": "SGEditor",
+            "Type": "Editor",
+            "LoadingPhase": "Default",
+            "AdditionalDependencies": [
+                "CoreUObject",
+                "Engine"
+            ]
+        }
 	],
 	"Plugins": [
 		{
