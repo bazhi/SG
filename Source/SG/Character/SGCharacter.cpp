@@ -16,6 +16,7 @@
 #include "SG/DataAsset/ConfigManager.h"
 #include "SG/DataAsset/TableRowDefine.h"
 #include "SG/GameInstance/SGGameInstance.h"
+#include "SG/Subsystem/ConfigGISubsystem.h"
 
 const FName Name_RagdollPose = "RagdollPose";
 const FName Name_BoneRoot = "root";
@@ -487,12 +488,12 @@ UAnimMontage* ASGCharacter::GetRollAnimation() const
     FDTRowOverlayState Query;
     Query.ID = OverlayState;
 
-    if(UConfigManager* Manager = GetConfigManager())
+    if(UConfigGISubsystem* Subsystem = UConfigGISubsystem::Get(GetGameInstance()))
     {
-       FDTRowOverlayState* Result = Manager->GetDataTableRow(Query);
+       FDTRowOverlayState* Result = Subsystem->GetDataTableRow(Query);
         if(Result)
         {
-            return Manager->GetCacheable(Result->AnimMontageRoll);
+            return Subsystem->GetCacheable(Result->AnimMontageRoll);
         }
     }
     return nullptr;
@@ -948,19 +949,18 @@ UAnimMontage* ASGCharacter::GetUpAnimation(bool bRagdollFaceUp)
     FDTRowOverlayState Query;
     Query.ID = OverlayState;
 
-    if (UConfigManager* Manager = GetConfigManager())
+    if (UConfigGISubsystem* Subsystem = UConfigGISubsystem::Get(GetGameInstance()))
     {
-        FDTRowOverlayState* Result = Manager->GetDataTableRow(Query);
+        FDTRowOverlayState* Result = Subsystem->GetDataTableRow(Query);
         if (Result)
         {
             if(bRagdollFaceUp)
             {
-                return Manager->GetCacheable(Result->AnimMontageBackUp);
+                return Subsystem->GetCacheable(Result->AnimMontageBackUp);
             }else
             {
-                return Manager->GetCacheable(Result->AnimMontageFrontUp);
+                return Subsystem->GetCacheable(Result->AnimMontageFrontUp);
             }
-
         }
     }
     return nullptr;

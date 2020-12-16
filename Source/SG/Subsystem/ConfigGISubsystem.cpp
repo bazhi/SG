@@ -11,14 +11,36 @@ void UConfigGISubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	if(USGGameInstance* GSGameInstance = Cast<USGGameInstance>(GetGameInstance()))
 	{
-        if(GSGameInstance->GetConfigManager())
-        {
-            GSGameInstance->GetConfigManager()->OnStartupLoad();
-        }
+		ConfigManager = GSGameInstance->GetConfigManager();
+	}
+	if(ConfigManager.IsValid())
+	{
+		for (auto SoftObject : ConfigManager->GetPreLoadTables())
+		{
+			UDataTable* DataTable = SoftObject.LoadSynchronous();
+			if (DataTable)
+			{
+				PreLoadTables.Emplace(DataTable->GetRowStruct(), DataTable);
+			}
+		}
 	}
 }
 
 void UConfigGISubsystem::Deinitialize()
 {
 
+}
+
+UConfigGISubsystem* UConfigGISubsystem::Get(UGameInstance* GameInstance)
+{
+	if(GameInstance)
+	{
+		return GameInstance->GetSubsystem<UConfigGISubsystem>();
+	}
+	return nullptr;
+}
+
+void UConfigGISubsystem::ClearCachedObjects()
+{
+    CachedObjects.Empty();
 }

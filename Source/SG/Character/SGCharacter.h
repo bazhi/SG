@@ -38,15 +38,6 @@ public:
     // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-    class UConfigManager* GetConfigManager() const
-    {
-        if (USGGameInstance* SGGameInstance = Cast<USGGameInstance>(GetGameInstance()))
-        {
-           return  SGGameInstance->GetConfigManager();
-        }
-        return nullptr;
-    }
-
 protected:
 
 
