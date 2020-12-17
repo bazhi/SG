@@ -1,17 +1,17 @@
 #include "ConfigGameSubsystem.h"
 #include "Kismet/GameplayStatics.h"
-#include "SG/DataAsset/ConfigManager.h"
+#include "SG/DataAsset/ConfigAsset.h"
 #include "SG/GameInstance/SGGameInstance.h"
 
 void UConfigGameSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	if(USGGameInstance* GSGameInstance = Cast<USGGameInstance>(GetGameInstance()))
 	{
-		ConfigManager = GSGameInstance->GetConfigManager();
+		ConfigAsset = GSGameInstance->GetConfigManager();
 	}
-	if(ConfigManager.IsValid())
+	if(ConfigAsset.IsValid())
 	{
-		for (auto SoftObject : ConfigManager->GetPreLoadTables())
+		for (auto SoftObject : ConfigAsset->GetPreLoadTables())
 		{
 			UDataTable* DataTable = SoftObject.LoadSynchronous();
 			if (DataTable)
@@ -39,9 +39,9 @@ UDataTable* UConfigGameSubsystem::GetDataTable(UScriptStruct* RowStruct)
         {
             return DataTable;
         }
-        if (ConfigManager.IsValid())
+        if (ConfigAsset.IsValid())
         {
-            if (UDataTable* DataTable = ConfigManager->GetDataTable(RowStruct))
+            if (UDataTable* DataTable = ConfigAsset->GetDataTable(RowStruct))
             {
                 DynamicLoadTables.Emplace(RowStruct, DataTable);
                 return DataTable;

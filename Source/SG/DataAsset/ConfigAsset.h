@@ -6,14 +6,14 @@
 #include "Engine/DataAsset.h"
 #include "Engine/DataTable.h"
 
-#include "ConfigManager.generated.h"
+#include "ConfigAsset.generated.h"
 
 struct FDataTableRow;
 /**
  * 
  */
 UCLASS()
-class SG_API UConfigManager : public UDataAsset
+class SG_API UConfigAsset : public UDataAsset
 {
     GENERATED_BODY()
 

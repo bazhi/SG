@@ -2,7 +2,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Engine/DataTable.h"
-#include "SG/DataAsset/ConfigManager.h"
+#include "SG/DataAsset/ConfigAsset.h"
 #include "SG/DataAsset/TableRowDefine.h"
 #include "ConfigWorldSubsystem.generated.h"
 
@@ -38,9 +38,9 @@ protected:
     UPROPERTY(Transient)
     TSet<UObject*> CachedObjects;
 
-    FString ContextString = TEXT("UConfigManager");
+    FString ContextString = TEXT("UConfigAsset");
 
-    TWeakObjectPtr<UConfigManager> ConfigManager;
+    TWeakObjectPtr<UConfigAsset> ConfigAsset;
     TWeakObjectPtr<class UConfigGameSubsystem> ConfigGameSubsystem;
 };
 

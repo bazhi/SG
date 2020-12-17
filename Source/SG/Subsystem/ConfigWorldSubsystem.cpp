@@ -30,9 +30,9 @@ UDataTable* UConfigWorldSubsystem::GetDataTable(UScriptStruct* RowStruct)
         {
             return DataTable;
         }
-        if (ConfigManager.IsValid())
+        if (ConfigAsset.IsValid())
         {
-            if (UDataTable* DataTable = ConfigManager->GetDataTable(RowStruct))
+            if (UDataTable* DataTable = ConfigAsset->GetDataTable(RowStruct))
             {
                 WorldLoadTables.Emplace(RowStruct, DataTable);
                 return DataTable;
@@ -52,7 +52,7 @@ UConfigGameSubsystem* UConfigWorldSubsystem::GetConfigGameSubsystem()
             ConfigGameSubsystem = GameInstance->GetSubsystem<UConfigGameSubsystem>();
             if (ConfigGameSubsystem.IsValid())
             {
-                ConfigManager = ConfigGameSubsystem->ConfigManager;
+                ConfigAsset = ConfigGameSubsystem->ConfigAsset;
             }
         }
     }

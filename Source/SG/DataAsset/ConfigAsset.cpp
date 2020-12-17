@@ -1,7 +1,7 @@
-#include "ConfigManager.h"
+#include "ConfigAsset.h"
 #include "Engine/StreamableManager.h"
 
-UDataTable* UConfigManager::GetDataTable(UScriptStruct* RowStruct)
+UDataTable* UConfigAsset::GetDataTable(UScriptStruct* RowStruct)
 {
     if (auto SoftObject = DynamicLoadMap.FindRef(RowStruct))
     {
@@ -28,7 +28,7 @@ UDataTable* UConfigManager::GetDataTable(UScriptStruct* RowStruct)
     return nullptr;
 }
 
-UDataTable* UConfigManager::GetWorldDataTable(UScriptStruct* RowStruct)
+UDataTable* UConfigAsset::GetWorldDataTable(UScriptStruct* RowStruct)
 {
     if (auto SoftObject = WorldLoadMap.FindRef(RowStruct))
     {
@@ -43,13 +43,13 @@ UDataTable* UConfigManager::GetWorldDataTable(UScriptStruct* RowStruct)
     return nullptr;
 }
 
-TSet<TSoftObjectPtr<UDataTable>>& UConfigManager::GetPreLoadTables()
+TSet<TSoftObjectPtr<UDataTable>>& UConfigAsset::GetPreLoadTables()
 {
     return PreLoad;
 }
 
 #if WITH_EDITORONLY_DATA
-void UConfigManager::PreSave(const ITargetPlatform* TargetPlatform)
+void UConfigAsset::PreSave(const ITargetPlatform* TargetPlatform)
 {
     PreLoad.StableSort([](const TSoftObjectPtr<UDataTable>& A, const TSoftObjectPtr<UDataTable>& B)
     {
@@ -64,7 +64,7 @@ void UConfigManager::PreSave(const ITargetPlatform* TargetPlatform)
 #endif
 
 
-void UConfigManager::PreSaveTableMap(TSet<TSoftObjectPtr<UDataTable>>& LoadSet, TMap<const UScriptStruct*, TSoftObjectPtr<UDataTable>>& OutMap)
+void UConfigAsset::PreSaveTableMap(TSet<TSoftObjectPtr<UDataTable>>& LoadSet, TMap<const UScriptStruct*, TSoftObjectPtr<UDataTable>>& OutMap)
 {
     LoadSet.StableSort([](const TSoftObjectPtr<UDataTable>& A, const TSoftObjectPtr<UDataTable>& B)
     {

@@ -3,7 +3,7 @@
 #include "ConfigWorldSubsystem.h"
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
-#include "SG/DataAsset/ConfigManager.h"
+#include "SG/DataAsset/ConfigAsset.h"
 #include "SG/DataAsset/TableRowDefine.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ConfigGameSubsystem.generated.h"
@@ -29,11 +29,11 @@ protected:
 
     FORCEINLINE_DEBUGGABLE UDataTable* GetDataTable(UScriptStruct* RowStruct);
 
-    TWeakObjectPtr<UConfigManager> ConfigManager;
+    TWeakObjectPtr<UConfigAsset> ConfigAsset;
 private:
     UPROPERTY(Transient)
     TMap<const UScriptStruct*, UDataTable*> PreLoadTables;
     UPROPERTY(Transient)
     TMap<const UScriptStruct*, UDataTable*> DynamicLoadTables;
-    FString ContextString = TEXT("UConfigManager");
+    FString ContextString = TEXT("UConfigAsset");
 };

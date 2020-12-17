@@ -13,11 +13,11 @@ class SG_API USGGameInstance : public UGameInstance
     GENERATED_BODY()
 
 public:
-    class UConfigManager* GetConfigManager()
+    class UConfigAsset* GetConfigManager()
     {
         return ConfigManager;
     }
 protected:
     UPROPERTY(EditDefaultsOnly, Category = "DataAssets")
-    class UConfigManager* ConfigManager;
+    class UConfigAsset* ConfigManager;
 };
