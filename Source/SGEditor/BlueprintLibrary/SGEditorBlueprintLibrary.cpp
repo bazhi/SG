@@ -12,7 +12,7 @@ bool USGEditorBlueprintLibrary::RenameRowsName(UDataTable* DataTable)
         DataTable->Modify();
         FName TempName = "TempName";
         TArray<FName> KeyNames = DataTable->GetRowNames();
-        KeyNames.StableSort();
+        KeyNames.StableSort(FNameFastLess());
         for (int i = 0; i < KeyNames.Num(); ++i)
         {
             TempName.SetNumber(i);
@@ -20,7 +20,7 @@ bool USGEditorBlueprintLibrary::RenameRowsName(UDataTable* DataTable)
         }
 
         KeyNames = DataTable->GetRowNames();
-        KeyNames.StableSort();
+        KeyNames.StableSort(FNameFastLess());
         for (int i = 0; i < KeyNames.Num(); ++i)
         {
             uint8* RowData = DataTable->GetRowMap().FindRef(KeyNames[i]);
@@ -39,7 +39,7 @@ bool USGEditorBlueprintLibrary::SortDataTable(UDataTable* DataTable)
     {
         DataTable->Modify();
         TArray<FName> KeyNames = DataTable->GetRowNames();
-        KeyNames.StableSort();
+        KeyNames.StableSort(FNameFastLess());
         for (int i = 0; i < KeyNames.Num(); ++i)
         {
             FDataTableEditorUtils::MoveRow(DataTable, KeyNames[i], FDataTableEditorUtils::ERowMoveDirection::Down, KeyNames.Num());
