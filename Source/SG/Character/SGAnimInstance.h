@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "ECharacter.h"
+
 #include "SGAnimInstance.generated.h"
 
 /**
@@ -13,8 +14,10 @@ class SG_API USGAnimInstance : public UAnimInstance
 {
     GENERATED_BODY()
 protected:
+
+#pragma region Config
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "References")
-    ACharacter* Character = nullptr;
+    class ASGCharacter* Character = nullptr;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "References")
     float DeltaTimeX = 0;
 
@@ -298,13 +301,15 @@ protected:
     float IKTraceDistanceAboveFoot = 50;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config")
     float IKTraceDistanceBelowFoot = 45;
+#pragma endregion
 
+public:
+    virtual void NativeInitializeAnimation() override;
+    virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 protected:
     void UpdateCharacterInfo();
 
     float GetAnimCurveCompact(const FName& CurveName);
     float GetAnimCurveClamped(const FName& CurveName, float Bias, float ClampMin, float ClampMax);
-
-    
 };

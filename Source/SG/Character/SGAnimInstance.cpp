@@ -1,15 +1,21 @@
-
-
-
 #include "SGAnimInstance.h"
+#include "SGCharacter.h"
 
-#include "GameFramework/Character.h"
+void USGAnimInstance::NativeInitializeAnimation()
+{
+	Super::NativeInitializeAnimation();
+}
+
+void USGAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+}
 
 void USGAnimInstance::UpdateCharacterInfo()
 {
 	if(IsValid(Character))
 	{
-	
+	  
 	}
 }
 
