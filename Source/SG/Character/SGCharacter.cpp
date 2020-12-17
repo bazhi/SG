@@ -486,7 +486,7 @@ UAnimMontage* ASGCharacter::GetRollAnimation() const
     FDTRowOverlayState Query;
     Query.ID = OverlayState;
 
-    if(UConfigGameSubsystem* Subsystem = UConfigGameSubsystem::Get(GetGameInstance()))
+    if(UConfigWorldSubsystem* Subsystem = UConfigWorldSubsystem::Get(this))
     {
        FDTRowOverlayState* Result = Subsystem->GetDataTableRow(Query);
         if(Result)
@@ -947,7 +947,7 @@ UAnimMontage* ASGCharacter::GetUpAnimation(bool bRagdollFaceUp)
     FDTRowOverlayState Query;
     Query.ID = OverlayState;
 
-    if (UConfigGameSubsystem* Subsystem = UConfigGameSubsystem::Get(GetGameInstance()))
+    if (UConfigWorldSubsystem* Subsystem = UConfigWorldSubsystem::Get(this))
     {
         FDTRowOverlayState* Result = Subsystem->GetDataTableRow(Query);
         if (Result)

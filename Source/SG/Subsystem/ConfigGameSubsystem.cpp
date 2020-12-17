@@ -27,12 +27,27 @@ void UConfigGameSubsystem::Deinitialize()
 
 }
 
-UConfigGameSubsystem* UConfigGameSubsystem::Get(UGameInstance* GameInstance)
+UDataTable* UConfigGameSubsystem::GetDataTable(UScriptStruct* RowStruct)
 {
-	if(GameInstance)
-	{
-		return GameInstance->GetSubsystem<UConfigGameSubsystem>();
-	}
-	return nullptr;
+    if (RowStruct)
+    {
+        if (UDataTable* DataTable = PreLoadTables.FindRef(RowStruct))
+        {
+            return DataTable;
+        }
+        if (UDataTable* DataTable = DynamicLoadTables.FindRef(RowStruct))
+        {
+            return DataTable;
+        }
+        if (ConfigManager.IsValid())
+        {
+            if (UDataTable* DataTable = ConfigManager->GetDataTable(RowStruct))
+            {
+                DynamicLoadTables.Emplace(RowStruct, DataTable);
+                return DataTable;
+            }
+        }
+    }
+    return nullptr;
 }
 
