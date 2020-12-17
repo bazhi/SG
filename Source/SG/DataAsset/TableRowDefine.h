@@ -102,16 +102,16 @@ public:
     virtual FName GetRowName() const override
     {
         FName Result = "K";
-        uint32 ID32 = (uint32)ID;
-        Result.SetNumber((ID32 << 8) + (uint8)SubID + NameBaseNumber);
+        uint32 ID32 = (uint32)RotationMode;
+        Result.SetNumber((ID32 << 8) + (uint8)Stance + NameBaseNumber);
         return Result;
     }
 
 public:
     UPROPERTY(EditDefaultsOnly, Category = "Base ID")
-    ERotationMode ID = ERotationMode::VelocityDirection;
+    ERotationMode RotationMode = ERotationMode::VelocityDirection;
     UPROPERTY(EditDefaultsOnly, Category = "Base ID")
-    EStance SubID = EStance::Standing;
+    EStance Stance = EStance::Standing;
 
 public:
     UPROPERTY(EditDefaultsOnly)

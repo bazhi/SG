@@ -307,13 +307,6 @@ void ASGCharacter::OnOverlayStateChanged(EOverlayState NewOverlayState)
 
 void ASGCharacter::SetMovementModel()
 {
-    if (MovementModel.DataTable)
-    {
-        if (auto FindResult = MovementModel.DataTable->FindRow<FSGMovementSettingsState>(MovementModel.RowName, ""))
-        {
-            MovementData = *FindResult;
-        }
-    }
 }
 
 void ASGCharacter::UpdateCharacterMovement()
@@ -329,84 +322,73 @@ void ASGCharacter::UpdateCharacterMovement()
 
 void ASGCharacter::UpdateDynamicMovementSettings(EGait AllowedGait)
 {
-    CurrentMovementSettings = GetTargetMovementSettings();
-    float AllowedSpeed = 0;
-    switch (AllowedGait)
+    UpdateMovementSetting();
+    if (DTRowMovementSetting)
     {
-        case EGait::Walking:
-            AllowedSpeed = CurrentMovementSettings.WalkSpeed;
-            break;
-        case EGait::Running:
-            AllowedSpeed = CurrentMovementSettings.RunSpeed;
-            break;
-        case EGait::Sprinting:
-            AllowedSpeed = CurrentMovementSettings.SprintSpeed;
-            break;
-        default: ;
-    }
-    if (auto LocalCharacterMovement = GetCharacterMovement())
-    {
-        LocalCharacterMovement->MaxWalkSpeed = AllowedSpeed;
-        LocalCharacterMovement->MaxWalkSpeedCrouched = AllowedSpeed;
-
-        float InTime = GetMappedSpeed();
-        if (CurrentMovementSettings.MovementCurve)
+        float AllowedSpeed = 0;
+        switch (AllowedGait)
         {
-            FVector VectorValue = CurrentMovementSettings.MovementCurve->GetVectorValue(InTime);
-            LocalCharacterMovement->MaxAcceleration = VectorValue.X;
-            LocalCharacterMovement->BrakingDecelerationWalking = VectorValue.Y;
-            LocalCharacterMovement->GroundFriction = VectorValue.Z;
+            case EGait::Walking:
+                AllowedSpeed = DTRowMovementSetting->WalkSpeed;
+                break;
+            case EGait::Running:
+                AllowedSpeed = DTRowMovementSetting->RunSpeed;
+                break;
+            case EGait::Sprinting:
+                AllowedSpeed = DTRowMovementSetting->SprintSpeed;
+                break;
+            default: ;
+        }
+        if (auto LocalCharacterMovement = GetCharacterMovement())
+        {
+            LocalCharacterMovement->MaxWalkSpeed = AllowedSpeed;
+            LocalCharacterMovement->MaxWalkSpeedCrouched = AllowedSpeed;
+
+            float InTime = GetMappedSpeed();
+            if (DTRowMovementSetting->MovementCurve)
+            {
+                FVector VectorValue = DTRowMovementSetting->MovementCurve->GetVectorValue(InTime);
+                LocalCharacterMovement->MaxAcceleration = VectorValue.X;
+                LocalCharacterMovement->BrakingDecelerationWalking = VectorValue.Y;
+                LocalCharacterMovement->GroundFriction = VectorValue.Z;
+            }
         }
     }
 }
 
-FSGMovementSettings ASGCharacter::GetTargetMovementSettings()
+void ASGCharacter::UpdateMovementSetting()
 {
-    const FSGMovementSettingsStance* SettingsStance = nullptr;
-    switch (RotationMode)
+    if (DTRowMovementSetting != nullptr || DTRowMovementSetting->RotationMode != RotationMode || DTRowMovementSetting->Stance != Stance)
     {
-        case ERotationMode::VelocityDirection:
-            SettingsStance = &MovementData.VelocityDirection;
-            break;
-        case ERotationMode::LookingDirection:
-            SettingsStance = &MovementData.LookingDirection;
-            break;
-        case ERotationMode::Aiming:
-            SettingsStance = &MovementData.Aiming;
-            break;
-        default: ;
-    }
-    if (SettingsStance)
-    {
-        switch (Stance)
+        FDTRowMovementSetting Query;
+        Query.RotationMode = RotationMode;
+        Query.Stance = Stance;
+
+        if (UConfigWorldSubsystem* Subsystem = UConfigWorldSubsystem::Get(this))
         {
-            case EStance::Standing:
-                return SettingsStance->Standing;
-            case EStance::Crouching:
-                return SettingsStance->Crouching;
-            default: ;
+            DTRowMovementSetting = Subsystem->GetDataTableRow(Query);
         }
     }
-    return FSGMovementSettings();
 }
 
 float ASGCharacter::GetMappedSpeed()
 {
-    float LocWalkSpeed = CurrentMovementSettings.WalkSpeed;
-    float LocRunSpeed = CurrentMovementSettings.RunSpeed;
-    float LocSprintSpeed = CurrentMovementSettings.SprintSpeed;
-    if (Speed <= LocWalkSpeed)
+    if (DTRowMovementSetting)
     {
-        return UKismetMathLibrary::MapRangeClamped(Speed, 0.f, LocWalkSpeed, 0.f, 1.f);
-    }
-    else if (Speed <= LocRunSpeed)
-    {
-        return UKismetMathLibrary::MapRangeClamped(Speed, LocWalkSpeed, LocRunSpeed, 1.f, 2.f);
-    }
-    else
-    {
+        float LocWalkSpeed = DTRowMovementSetting->WalkSpeed;
+        float LocRunSpeed = DTRowMovementSetting->RunSpeed;
+        float LocSprintSpeed = DTRowMovementSetting->SprintSpeed;
+        if (Speed <= LocWalkSpeed)
+        {
+            return UKismetMathLibrary::MapRangeClamped(Speed, 0.f, LocWalkSpeed, 0.f, 1.f);
+        }
+        if (Speed <= LocRunSpeed)
+        {
+            return UKismetMathLibrary::MapRangeClamped(Speed, LocWalkSpeed, LocRunSpeed, 1.f, 2.f);
+        }
         return UKismetMathLibrary::MapRangeClamped(Speed, LocRunSpeed, LocSprintSpeed, 2.f, 3.f);
     }
+    return 0;
 }
 
 EGait ASGCharacter::GetAllowedGait()
@@ -438,9 +420,13 @@ EGait ASGCharacter::GetAllowedGait()
 
 EGait ASGCharacter::GetActualGait(EGait AllowedGait)
 {
-    float LocalWalkSpeed = CurrentMovementSettings.WalkSpeed;
-    float LocalRunSpeed = CurrentMovementSettings.RunSpeed;
-    //float LocalSprintSpeed = CurrentMovementSettings.SprintSpeed;
+    float LocalWalkSpeed = 0;
+    float LocalRunSpeed = 0;
+    if (DTRowMovementSetting)
+    {
+        LocalWalkSpeed = DTRowMovementSetting->WalkSpeed;
+        LocalRunSpeed = DTRowMovementSetting->RunSpeed;
+    }
     if (Speed >= LocalRunSpeed + 10.0f)
     {
         if (EGait::Sprinting == AllowedGait)
@@ -491,7 +477,7 @@ bool ASGCharacter::CanSprint()
 
 UAnimMontage* ASGCharacter::GetRollAnimation() const
 {
-    if(DTRowOverlayState)
+    if (DTRowOverlayState)
     {
         if (UConfigWorldSubsystem* Subsystem = UConfigWorldSubsystem::Get(this))
         {
@@ -601,9 +587,9 @@ bool ASGCharacter::SetActorLocationAndRotation(FVector NewLocation, FRotator New
 
 float ASGCharacter::CalculateGroundedRotationRate()
 {
-    if (CurrentMovementSettings.RotationRateCurve)
+    if (DTRowMovementSetting && DTRowMovementSetting->RotationRateCurve)
     {
-        float CurveFloat = CurrentMovementSettings.RotationRateCurve->GetFloatValue(GetMappedSpeed());
+        float CurveFloat = DTRowMovementSetting->RotationRateCurve->GetFloatValue(GetMappedSpeed());
         return CurveFloat * UKismetMathLibrary::MapRangeClamped(AimYawRate, 0, 300, 1, 3);
     }
     return 0.0f;
@@ -706,7 +692,7 @@ bool ASGCharacter::MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugT
 void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWorldSpace, EMantleType MantleType)
 {
     const UDAssetMantle* MantleAsset = GetMantleAsset(MantleType);
-    if(nullptr == MantleAsset)
+    if (nullptr == MantleAsset)
     {
         return;
     }
@@ -1069,10 +1055,10 @@ void ASGCharacter::OnJumpPressed()
             case EMovementState::Grounded:
                 if (HasMovementInput)
                 {
-                   if(MantleCheck(FallingTraceSettings, EDrawDebugTrace::ForDuration))
-                   {
-                       return;
-                   }
+                    if (MantleCheck(FallingTraceSettings, EDrawDebugTrace::ForDuration))
+                    {
+                        return;
+                    }
                 }
                 switch (Stance)
                 {
@@ -1152,12 +1138,10 @@ void ASGCharacter::OnAimReleased()
 
 void ASGCharacter::OnStancePressed()
 {
-
 }
 
 void ASGCharacter::OnCameraPressed()
 {
-
 }
 
 void ASGCharacter::OnCameraReleased()
@@ -1176,10 +1160,11 @@ void ASGCharacter::OnSprintReleased()
 
 void ASGCharacter::OnRagdollPressed()
 {
-    if(EMovementState::Ragdoll == MovementState)
+    if (EMovementState::Ragdoll == MovementState)
     {
         RagdollEnd();
-    }else
+    }
+    else
     {
         RagdollStart();
     }

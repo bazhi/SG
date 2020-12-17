@@ -71,7 +71,7 @@ protected:
     void SetMovementModel();
     void UpdateCharacterMovement();
     void UpdateDynamicMovementSettings(EGait AllowedGait);
-    FSGMovementSettings GetTargetMovementSettings();
+    void UpdateMovementSetting();
     float GetMappedSpeed();
     EGait GetAllowedGait();
     EGait GetActualGait(EGait AllowedGait);
@@ -213,13 +213,6 @@ protected:
     UPROPERTY(Transient, BlueprintReadOnly, Category = "State Values")
     EOverlayState OverlayState = EOverlayState::Default;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement System")
-    FDataTableRowHandle MovementModel;
-    UPROPERTY(Transient, BlueprintReadOnly, Category = "Movement System")
-    FSGMovementSettingsState MovementData;
-    UPROPERTY(Transient, BlueprintReadOnly, Category = "Movement System")
-    FSGMovementSettings CurrentMovementSettings;
-
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Rotation System")
     FRotator TargetRotation = FRotator::ZeroRotator;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Rotation System")
@@ -269,6 +262,7 @@ protected:
 protected:
     FDTRowOverlayState* DTRowOverlayState;
 
+    FDTRowMovementSetting* DTRowMovementSetting;
 private:
     FTimerHandle TimerResetBrakingFactor;
 };

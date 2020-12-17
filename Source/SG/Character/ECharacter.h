@@ -169,47 +169,6 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSGMovementSettings
-{
-    GENERATED_BODY()
-public:
-    UPROPERTY(EditDefaultsOnly)
-    float WalkSpeed = 0;
-    UPROPERTY(EditDefaultsOnly)
-    float RunSpeed = 0;
-    UPROPERTY(EditDefaultsOnly)
-    float SprintSpeed = 0;
-    UPROPERTY(EditDefaultsOnly)
-    class UCurveVector* MovementCurve = nullptr;
-    UPROPERTY(EditDefaultsOnly)
-    class UCurveFloat* RotationRateCurve = nullptr;
-};
-
-USTRUCT(BlueprintType)
-struct FSGMovementSettingsStance
-{
-    GENERATED_BODY()
-public:
-    UPROPERTY(EditDefaultsOnly)
-    FSGMovementSettings Standing;
-    UPROPERTY(EditDefaultsOnly)
-    FSGMovementSettings Crouching;
-};
-
-USTRUCT(BlueprintType)
-struct FSGMovementSettingsState : public FTableRowBase
-{
-    GENERATED_BODY()
-public:
-    UPROPERTY(EditDefaultsOnly)
-    FSGMovementSettingsStance VelocityDirection;
-    UPROPERTY(EditDefaultsOnly)
-    FSGMovementSettingsStance LookingDirection;
-    UPROPERTY(EditDefaultsOnly)
-    FSGMovementSettingsStance Aiming;
-};
-
-USTRUCT(BlueprintType)
 struct FGSComponentAndTransform
 {
     GENERATED_BODY()
