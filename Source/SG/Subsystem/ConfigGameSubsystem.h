@@ -1,22 +1,18 @@
 #pragma once
 
+#include "ConfigWorldSubsystem.h"
 #include "CoreMinimal.h"
-
 #include "Engine/DataTable.h"
-
-
 #include "SG/DataAsset/ConfigManager.h"
 #include "SG/DataAsset/TableRowDefine.h"
-
-
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "ConfigGISubsystem.generated.h"
+#include "ConfigGameSubsystem.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SG_API UConfigGISubsystem : public UGameInstanceSubsystem
+class SG_API UConfigGameSubsystem : public UGameInstanceSubsystem
 {
     GENERATED_BODY()
 public:
@@ -24,18 +20,17 @@ public:
 
     virtual void Deinitialize() override;
 
-    static UConfigGISubsystem* Get(UGameInstance* GameInstance);
+    static UConfigGameSubsystem* Get(UGameInstance* GameInstance);
+
+    template <class T = TSoftObjectPtr<UObject>>
+    T* GetCacheable(TSoftObjectPtr<T>& Item);
 
 protected:
     void EmptyDynamicTables()
     {
         DynamicLoadTables.Empty();
     };
-
-    void ClearCachedObjects();
 public:
-    template <class T = TSoftObjectPtr<UObject>>
-    T* GetCacheable(TSoftObjectPtr<T>& Item);
     template <class T = FDataTableRow>
     UDataTable* GetDataTable();
     template <class T = FDataTableRow>
@@ -46,32 +41,24 @@ private:
     TMap<const UScriptStruct*, UDataTable*> PreLoadTables;
     UPROPERTY(Transient)
     TMap<const UScriptStruct*, UDataTable*> DynamicLoadTables;
-    UPROPERTY(Transient)
-    TSet<UObject*> CachedObjects;
-
     FString ContextString = TEXT("UConfigManager");
 
     TWeakObjectPtr<UConfigManager> ConfigManager;
 };
 
 template <class T>
-T* UConfigGISubsystem::GetCacheable(TSoftObjectPtr<T>& Item)
+T* UConfigGameSubsystem::GetCacheable(TSoftObjectPtr<T>& Item)
 {
     if (auto Object = Item.Get())
     {
         return Object;
     }
 
-    if (auto Object = Item.LoadSynchronous())
-    {
-        CachedObjects.Add(Object);
-        return Object;
-    }
-    return nullptr;
+    return GetWorld()->GetSubsystem<UConfigWorldSubsystem>()->GetCacheable(Item);
 }
 
 template <class T>
-UDataTable* UConfigGISubsystem::GetDataTable()
+UDataTable* UConfigGameSubsystem::GetDataTable()
 {
     UScriptStruct* RowStruct = T::StaticStruct();
     if (RowStruct)
@@ -84,12 +71,29 @@ UDataTable* UConfigGISubsystem::GetDataTable()
         {
             return DataTable;
         }
-        if(ConfigManager.IsValid())
+        if (ConfigManager.IsValid())
         {
-            if(UDataTable* DataTable = ConfigManager->GetDataTable(RowStruct))
+            if (UDataTable* DataTable = ConfigManager->GetDataTable(RowStruct))
             {
                 DynamicLoadTables.Emplace(RowStruct, DataTable);
                 return DataTable;
+            }
+        }
+
+        UConfigWorldSubsystem* WorldSubsystem = GetWorld()->GetSubsystem<UConfigWorldSubsystem>();
+        if(WorldSubsystem)
+        {
+            if (UDataTable* DataTable = WorldSubsystem->WorldLoadTables.FindRef(RowStruct))
+            {
+                return DataTable;
+            }
+            if (ConfigManager.IsValid())
+            {
+                if (UDataTable* DataTable = ConfigManager->GetWorldDataTable(RowStruct))
+                {
+                    WorldSubsystem->WorldLoadTables.Emplace(RowStruct, DataTable);
+                    return DataTable;
+                }
             }
         }
     }
@@ -97,7 +101,7 @@ UDataTable* UConfigGISubsystem::GetDataTable()
 }
 
 template <class T>
-T* UConfigGISubsystem::GetDataTableRow(const T& Item)
+T* UConfigGameSubsystem::GetDataTableRow(const T& Item)
 {
     if (const UDataTable* DataTable = GetDataTable<T>())
     {

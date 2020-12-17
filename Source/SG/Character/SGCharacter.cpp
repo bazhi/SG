@@ -13,10 +13,8 @@
 #include "Kismet/KismetMathLibrary.h"
 
 #include "SG/BlueprintLibrary/GSBlueprintLibrary.h"
-#include "SG/DataAsset/ConfigManager.h"
 #include "SG/DataAsset/TableRowDefine.h"
-#include "SG/GameInstance/SGGameInstance.h"
-#include "SG/Subsystem/ConfigGISubsystem.h"
+#include "SG/Subsystem/ConfigGameSubsystem.h"
 
 const FName Name_RagdollPose = "RagdollPose";
 const FName Name_BoneRoot = "root";
@@ -488,7 +486,7 @@ UAnimMontage* ASGCharacter::GetRollAnimation() const
     FDTRowOverlayState Query;
     Query.ID = OverlayState;
 
-    if(UConfigGISubsystem* Subsystem = UConfigGISubsystem::Get(GetGameInstance()))
+    if(UConfigGameSubsystem* Subsystem = UConfigGameSubsystem::Get(GetGameInstance()))
     {
        FDTRowOverlayState* Result = Subsystem->GetDataTableRow(Query);
         if(Result)
@@ -949,7 +947,7 @@ UAnimMontage* ASGCharacter::GetUpAnimation(bool bRagdollFaceUp)
     FDTRowOverlayState Query;
     Query.ID = OverlayState;
 
-    if (UConfigGISubsystem* Subsystem = UConfigGISubsystem::Get(GetGameInstance()))
+    if (UConfigGameSubsystem* Subsystem = UConfigGameSubsystem::Get(GetGameInstance()))
     {
         FDTRowOverlayState* Result = Subsystem->GetDataTableRow(Query);
         if (Result)

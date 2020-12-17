@@ -24,6 +24,8 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Configs")
     TSet<TSoftObjectPtr<UDataTable>> DynamicLoad;
     UPROPERTY(EditDefaultsOnly, Category = "Configs")
+    TSet<TSoftObjectPtr<UDataTable>> WorldLoad;
+    UPROPERTY(EditDefaultsOnly, Category = "Configs")
     TSet<TSoftObjectPtr<UDataTable>> EditorLoad;
     UPROPERTY(VisibleDefaultsOnly, Category = "Configs")
     TMap<const UScriptStruct*, TSoftObjectPtr<UDataTable>> EditorLoadMap;
@@ -31,12 +33,16 @@ protected:
 
     UPROPERTY(VisibleDefaultsOnly, Category = "Configs")
     TMap<const UScriptStruct*, TSoftObjectPtr<UDataTable>> DynamicLoadMap;
-
+    UPROPERTY(VisibleDefaultsOnly, Category = "Configs")
+    TMap<const UScriptStruct*, TSoftObjectPtr<UDataTable>> WorldLoadMap;
 public:
     UDataTable* GetDataTable(UScriptStruct* RowStruct);
+    UDataTable* GetWorldDataTable(UScriptStruct* RowStruct);
     TSet<TSoftObjectPtr<UDataTable>>& GetPreLoadTables();
 protected:
 #if WITH_EDITORONLY_DATA
     virtual void PreSave(const ITargetPlatform* TargetPlatform) override;
 #endif
+
+    void PreSaveTableMap(TSet<TSoftObjectPtr<UDataTable>>& LoadSet, TMap<const UScriptStruct*, TSoftObjectPtr<UDataTable>>& OutMap);
 };

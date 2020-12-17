@@ -1,13 +1,9 @@
-
-
-
-#include "ConfigGISubsystem.h"
-
-
+#include "ConfigGameSubsystem.h"
+#include "Kismet/GameplayStatics.h"
 #include "SG/DataAsset/ConfigManager.h"
 #include "SG/GameInstance/SGGameInstance.h"
 
-void UConfigGISubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UConfigGameSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	if(USGGameInstance* GSGameInstance = Cast<USGGameInstance>(GetGameInstance()))
 	{
@@ -26,21 +22,17 @@ void UConfigGISubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 }
 
-void UConfigGISubsystem::Deinitialize()
+void UConfigGameSubsystem::Deinitialize()
 {
 
 }
 
-UConfigGISubsystem* UConfigGISubsystem::Get(UGameInstance* GameInstance)
+UConfigGameSubsystem* UConfigGameSubsystem::Get(UGameInstance* GameInstance)
 {
 	if(GameInstance)
 	{
-		return GameInstance->GetSubsystem<UConfigGISubsystem>();
+		return GameInstance->GetSubsystem<UConfigGameSubsystem>();
 	}
 	return nullptr;
 }
 
-void UConfigGISubsystem::ClearCachedObjects()
-{
-    CachedObjects.Empty();
-}
