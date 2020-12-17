@@ -294,6 +294,14 @@ void ASGCharacter::OnOverlayStateChanged(EOverlayState NewOverlayState)
 {
     EOverlayState PreviousOverlayState = OverlayState;
     OverlayState = NewOverlayState;
+
+    FDTRowOverlayState Query;
+    Query.ID = OverlayState;
+
+    if (UConfigWorldSubsystem* Subsystem = UConfigWorldSubsystem::Get(this))
+    {
+        DTRowOverlayState = Subsystem->GetDataTableRow(Query);
+    }
 }
 
 
@@ -483,15 +491,11 @@ bool ASGCharacter::CanSprint()
 
 UAnimMontage* ASGCharacter::GetRollAnimation() const
 {
-    FDTRowOverlayState Query;
-    Query.ID = OverlayState;
-
-    if(UConfigWorldSubsystem* Subsystem = UConfigWorldSubsystem::Get(this))
+    if(DTRowOverlayState)
     {
-       FDTRowOverlayState* Result = Subsystem->GetDataTableRow(Query);
-        if(Result)
+        if (UConfigWorldSubsystem* Subsystem = UConfigWorldSubsystem::Get(this))
         {
-            return Subsystem->GetCacheable(Result->AnimMontageRoll);
+            return Subsystem->GetCacheable(DTRowOverlayState->AnimMontageRoll);
         }
     }
     return nullptr;
@@ -944,20 +948,17 @@ void ASGCharacter::SetActorLocationDuringRagdoll()
 
 UAnimMontage* ASGCharacter::GetUpAnimation(bool bRagdollFaceUp)
 {
-    FDTRowOverlayState Query;
-    Query.ID = OverlayState;
-
-    if (UConfigWorldSubsystem* Subsystem = UConfigWorldSubsystem::Get(this))
+    if (DTRowOverlayState)
     {
-        FDTRowOverlayState* Result = Subsystem->GetDataTableRow(Query);
-        if (Result)
+        if (UConfigWorldSubsystem* Subsystem = UConfigWorldSubsystem::Get(this))
         {
-            if(bRagdollFaceUp)
+            if (bRagdollFaceUp)
             {
-                return Subsystem->GetCacheable(Result->AnimMontageBackUp);
-            }else
+                return Subsystem->GetCacheable(DTRowOverlayState->AnimMontageBackUp);
+            }
+            else
             {
-                return Subsystem->GetCacheable(Result->AnimMontageFrontUp);
+                return Subsystem->GetCacheable(DTRowOverlayState->AnimMontageFrontUp);
             }
         }
     }

@@ -9,8 +9,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 
-
 #include "SG/DataAsset/DAssetMantle.h"
+#include "SG/DataAsset/TableRowDefine.h"
 #include "SG/GameInstance/SGGameInstance.h"
 #include "SG/Interface/GSCameraInterface.h"
 #include "SG/Interface/GSCharacterInterface.h"
@@ -265,6 +265,9 @@ protected:
     //Visibility
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ETraceTypeQuery")
     TEnumAsByte<ETraceTypeQuery> TraceTypeRagdoll;
+
+protected:
+    FDTRowOverlayState* DTRowOverlayState;
 
 private:
     FTimerHandle TimerResetBrakingFactor;
