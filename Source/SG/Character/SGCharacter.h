@@ -215,9 +215,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement System")
     FDataTableRowHandle MovementModel;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement System")
+    UPROPERTY(Transient, BlueprintReadOnly, Category = "Movement System")
     FSGMovementSettingsState MovementData;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement System")
+    UPROPERTY(Transient, BlueprintReadOnly, Category = "Movement System")
     FSGMovementSettings CurrentMovementSettings;
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Rotation System")

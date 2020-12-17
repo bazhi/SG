@@ -7,7 +7,7 @@
 
 bool USGEditorBlueprintLibrary::RenameRowsName(UDataTable* DataTable)
 {
-    if (DataTable)
+    if (DataTable && DataTable->GetRowStruct()->IsChildOf(FDataTableRow::StaticStruct()))
     {
         DataTable->Modify();
         FName TempName = "TempName";
@@ -35,7 +35,7 @@ bool USGEditorBlueprintLibrary::RenameRowsName(UDataTable* DataTable)
 
 bool USGEditorBlueprintLibrary::SortDataTable(UDataTable* DataTable)
 {
-    if (DataTable)
+    if (DataTable && DataTable->GetRowStruct()->IsChildOf(FDataTableRow::StaticStruct()))
     {
         DataTable->Modify();
         TArray<FName> KeyNames = DataTable->GetRowNames();

@@ -92,3 +92,36 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "AnimMontage")
     TMap<EMantleType, TSoftObjectPtr<UDAssetMantle>> AssetMantleMap;
 };
+
+USTRUCT()
+struct FDTRowMovementSetting : public FDataTableRow
+{
+    GENERATED_BODY()
+
+public:
+    virtual FName GetRowName() const override
+    {
+        FName Result = "K";
+        uint32 ID32 = (uint32)ID;
+        Result.SetNumber((ID32 << 8) + (uint8)SubID + NameBaseNumber);
+        return Result;
+    }
+
+public:
+    UPROPERTY(EditDefaultsOnly, Category = "Base ID")
+    ERotationMode ID = ERotationMode::VelocityDirection;
+    UPROPERTY(EditDefaultsOnly, Category = "Base ID")
+    EStance SubID = EStance::Standing;
+
+public:
+    UPROPERTY(EditDefaultsOnly)
+    float WalkSpeed = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float RunSpeed = 0;
+    UPROPERTY(EditDefaultsOnly)
+    float SprintSpeed = 0;
+    UPROPERTY(EditDefaultsOnly)
+    class UCurveVector* MovementCurve = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    class UCurveFloat* RotationRateCurve = nullptr;
+};
