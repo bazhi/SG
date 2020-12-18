@@ -309,7 +309,20 @@ public:
 
 protected:
     void UpdateCharacterInfo();
+    void UpdateAimingValues();
+    void UpdateLayerValues();
+    void UpdateMovementValues();
+    void UpdateRotationValues();
+    void UpdateInAirValues();
+    void UpdateRagdollValues();
+    void UpdateFootIK();
+
+protected:
+    FORCEINLINE_DEBUGGABLE bool ShouldMoveCheck() const;
 
     float GetAnimCurveCompact(const FName& CurveName);
     float GetAnimCurveClamped(const FName& CurveName, float Bias, float ClampMin, float ClampMax);
+
+ private:
+     bool bGroundMoved = false;
 };
