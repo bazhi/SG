@@ -1,8 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataTable.h"
-
+#include "UObject/NameTypes.h"
 #include "ECharacter.generated.h"
 
 UENUM(BlueprintType)
@@ -126,6 +125,20 @@ enum class EMovementDirection : uint8
     Backward,
 };
 
+UENUM(BlueprintType)
+enum class ETurnInPlace : uint8
+{
+    None,
+    NL90,
+    NR90,
+    NL180,
+    NR180,
+    CLFL90,
+    CLFR90,
+    CLFL180,
+    CLFR180,
+};
+
 
 USTRUCT(BlueprintType)
 struct FSGVelocityBlend
@@ -159,13 +172,15 @@ struct FSGTurnInPlaceAsset
     GENERATED_BODY()
 public:
     UPROPERTY(EditDefaultsOnly)
-    UAnimSequenceBase* Animation = nullptr;
+    class UAnimSequenceBase* Animation = nullptr;
     UPROPERTY(EditDefaultsOnly)
     float AnimatedAngle = 0;
     UPROPERTY(EditDefaultsOnly)
     FName SlotName = "None";
     UPROPERTY(EditDefaultsOnly)
     float PlayRate = 1.0f;
+    UPROPERTY(EditDefaultsOnly)
+    bool ScaleTurnAngle = true;
 };
 
 USTRUCT(BlueprintType)
@@ -180,7 +195,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FGSCameraSettings
+struct FSGCameraSettings
 {
     GENERATED_BODY()
 public:
@@ -197,35 +212,35 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FGSCameraSettingsGait
+struct FSGCameraSettingsGait
 {
     GENERATED_BODY()
 public:
     UPROPERTY(EditDefaultsOnly)
-    FGSCameraSettings Walking;
+    FSGCameraSettings Walking;
     UPROPERTY(EditDefaultsOnly)
-    FGSCameraSettings Running;
+    FSGCameraSettings Running;
     UPROPERTY(EditDefaultsOnly)
-    FGSCameraSettings Sprinting;
+    FSGCameraSettings Sprinting;
     UPROPERTY(EditDefaultsOnly)
-    FGSCameraSettings Crouching;
+    FSGCameraSettings Crouching;
 };
 
 USTRUCT(BlueprintType)
-struct FGSCameraSettingsState
+struct FSGCameraSettingsState
 {
     GENERATED_BODY()
 public:
     UPROPERTY(EditDefaultsOnly)
-    FGSCameraSettingsGait VelocityDirection;
+    FSGCameraSettingsGait VelocityDirection;
     UPROPERTY(EditDefaultsOnly)
-    FGSCameraSettingsGait LookingDirection;
+    FSGCameraSettingsGait LookingDirection;
     UPROPERTY(EditDefaultsOnly)
-    FGSCameraSettingsGait Aiming;
+    FSGCameraSettingsGait Aiming;
 };
 
 USTRUCT(BlueprintType)
-struct FGSDynamicMontageParams
+struct FSGDynamicMontageParams
 {
     GENERATED_BODY()
 public:
@@ -242,7 +257,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FGSMantleParams
+struct FSGMantleParams
 {
     GENERATED_BODY()
 public:
@@ -259,7 +274,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FGSMantleTraceSettings
+struct FSGMantleTraceSettings
 {
     GENERATED_BODY()
 public:
@@ -276,7 +291,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FGSRotateInPlaceAsset
+struct FSGRotateInPlaceAsset
 {
     GENERATED_BODY()
 public:
@@ -294,19 +309,44 @@ public:
     float FastPlayRate = 1.0f;
 };
 
-USTRUCT(BlueprintType)
-struct FGSTurnInPlaceAsset
+namespace SGName
 {
-    GENERATED_BODY()
-public:
-    UPROPERTY(EditDefaultsOnly)
-    class UAnimSequenceBase* Animation = nullptr;
-    UPROPERTY(EditDefaultsOnly)
-    float AnimatedAngle = 0;
-    UPROPERTY(EditDefaultsOnly)
-    FName SlotName = "None";
-    UPROPERTY(EditDefaultsOnly)
-    float PlayRate = 1.0f;
-    UPROPERTY(EditDefaultsOnly)
-    bool ScaleTurnAngle = true;
+    const FName Mask_AimOffset = "Mask_AimOffset";
+    const FName YawOffset = "YawOffset";
+    const FName RotationAmount = "RotationAmount";
+
+    namespace Curve
+    {
+        const FName BasePose_N = "BasePose_N";
+        const FName BasePose_CLF = "BasePose_CLF";
+        const FName Layering_Spine_Add = "Layering_Spine_Add";
+        const FName Layering_Head_Add = "Layering_Head_Add";
+        const FName Layering_Arm_L_Add = "Layering_Arm_L_Add";
+        const FName Layering_Arm_R_Add = "Layering_Arm_R_Add";
+
+        const FName Layering_Hand_R = "Layering_Hand_R";
+        const FName Layering_Hand_L = "Layering_Hand_L";
+        const FName Enable_HandIK_L = "Enable_HandIK_L";
+        const FName Layering_Arm_L = "Layering_Arm_L";
+        const FName Enable_HandIK_R = "Enable_HandIK_R";
+        const FName Layering_Arm_R = "Layering_Arm_R";
+        const FName Layering_Arm_L_LS = "Layering_Arm_L_LS";
+        const FName Layering_Arm_R_LS = "Layering_Arm_R_LS";
+
+        const FName FootLock_L = "FootLock_L";
+        const FName FootLock_R = "FootLock_R";
+        const FName Enable_FootIK_L = "Enable_FootIK_L";
+        const FName Enable_FootIK_R = "Enable_FootIK_R";
+
+        const FName Enable_Transition = "Enable_Transition";
+    };
+
+    namespace Bone
+    {
+        const FName IK_Foot_L = "ik_foot_l";
+        const FName IK_Foot_R = "ik_foot_r";
+        const FName Foot_Target_L = "VB foot_target_l";
+        const FName Foot_Target_R = "VB foot_target_r";
+
+    }
 };

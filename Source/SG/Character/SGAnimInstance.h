@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "ECharacter.h"
+#include "Kismet/KismetSystemLibrary.h"
+
 
 #include "SGAnimInstance.generated.h"
 
@@ -70,7 +72,7 @@ protected:
     EHipsDirection TrackedHipsDirection = EHipsDirection::F;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AnimGraph Grounded")
     FVector RelativeAccelerationAmount = FVector::ZeroVector;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AnimGraph Grounded")
+    UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Grounded")
     bool ShouldMove = false;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AnimGraph Grounded")
     bool RotateL = false;
@@ -301,11 +303,20 @@ protected:
     float IKTraceDistanceAboveFoot = 50;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config")
     float IKTraceDistanceBelowFoot = 45;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Grounded")
+    FSGDynamicMontageParams DynamicTransitionLeft;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Grounded")
+    FSGDynamicMontageParams DynamicTransitionRight;
 #pragma endregion
 
 public:
     virtual void NativeInitializeAnimation() override;
     virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+protected:
+    //EventGraph
+    void PlayDynamicTransition(float ReTriggerDelay, const FSGDynamicMontageParams& Params);
 
 protected:
     void UpdateCharacterInfo();
@@ -318,11 +329,34 @@ protected:
     void UpdateFootIK();
 
 protected:
+    //Grounded
     FORCEINLINE_DEBUGGABLE bool ShouldMoveCheck() const;
+    FORCEINLINE_DEBUGGABLE bool CanRotateInPlace() const;
+    FORCEINLINE_DEBUGGABLE bool CanTurnInPlace() const;
+    FORCEINLINE_DEBUGGABLE bool CanDynamicTransition() const;
+    FORCEINLINE_DEBUGGABLE bool CanOverlayTransition() const;
+    void TurnInPlace(const FRotator& TargetRotaion, float PlayRateScale, float StartTime, bool OverrideCurrent);
+    void TurnInPlaceCheck();
+    void RotateInPlaceCheck();
+    void DynamicTransitionCheck();
 
+    //FootIK
+    void SetFootOffsets(const FName EnableFootIKCurve, const FName& IKFootBone, const FName& RootBone, FVector& CurrentLocationTarget, FVector& CurrentLocationOffset, FRotator& CurrentRotationOffset);
+    void SetPelvisIKOffset(const FVector& FootOffsetLTarget, const FVector& FootOffsetRTarget);
+    void SetFootLocking(const FName& EnableFootIKCurve, const FName& FootLockCurve, const FName& IKFootBone, float& CurrentFootLockAlpha, FVector& CurrentFootLockLocation, FRotator& CurrentFootLockRotation);
+    void SetFootLockOffsets(FVector& LocalLocation, FRotator& LocalRotation);
+
+    //Movement
+    FSGVelocityBlend CalculateVelocityBlend();
+
+    //Curve
     float GetAnimCurveCompact(const FName& CurveName);
     float GetAnimCurveClamped(const FName& CurveName, float Bias, float ClampMin, float ClampMax);
 
- private:
-     bool bGroundMoved = false;
+protected:
+    EDrawDebugTrace::Type GetTraceDebugType(EDrawDebugTrace::Type DebugType);
+
+    //Visibility
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ETraceTypeQuery")
+    TEnumAsByte<ETraceTypeQuery> TraceTypeFootIK;
 };

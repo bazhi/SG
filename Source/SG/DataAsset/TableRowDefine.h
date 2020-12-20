@@ -125,3 +125,34 @@ public:
     UPROPERTY(EditDefaultsOnly)
     class UCurveFloat* RotationRateCurve = nullptr;
 };
+
+USTRUCT()
+struct FDTRowTurnInPlace : public FDataTableRow
+{
+    GENERATED_BODY()
+
+public:
+    virtual FName GetRowName() const override
+    {
+        FName Result = "K";
+        uint32 ID32 = (uint32)TurnMode;
+        Result.SetNumber(ID32 + NameBaseNumber);
+        return Result;
+    }
+
+public:
+    UPROPERTY(EditDefaultsOnly, Category = "Base ID")
+    ETurnInPlace TurnMode = ETurnInPlace::NL90;
+
+public:
+    UPROPERTY(EditDefaultsOnly)
+    class UAnimSequenceBase* Animation = nullptr;
+    UPROPERTY(EditDefaultsOnly)
+    float AnimatedAngle = 0;
+    UPROPERTY(EditDefaultsOnly)
+    FName SlotName = "None";
+    UPROPERTY(EditDefaultsOnly)
+    float PlayRate = 1.0f;
+    UPROPERTY(EditDefaultsOnly)
+    bool ScaleTurnAngle = true;
+};

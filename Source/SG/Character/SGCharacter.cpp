@@ -510,7 +510,7 @@ void ASGCharacter::UpdateGroundedRotation()
                     {
                         case EGait::Walking:
                         case EGait::Running:
-                            SmoothCharacterRotation(FRotator(0, 0, GetControlRotation().Yaw + GetAnimCurveValue("YawOffset")), 500, CalculateGroundedRotationRate());
+                            SmoothCharacterRotation(FRotator(0, 0, GetControlRotation().Yaw + GetAnimCurveValue(SGName::YawOffset)), 500, CalculateGroundedRotationRate());
                             break;
                         case EGait::Sprinting:
                             SmoothCharacterRotation(FRotator(0, 0, GetControlRotation().Yaw), 1000, 20);
@@ -530,7 +530,7 @@ void ASGCharacter::UpdateGroundedRotation()
                 LimitRotation(-100, 100, 20);
             }
 
-            float RotationAmount = GetAnimCurveValue("RotationAmount");
+            float RotationAmount = GetAnimCurveValue(SGName::RotationAmount);
             if (FMath::Abs(RotationAmount) > 0.001f)
             {
                 AddActorWorldRotation(FRotator(0, 0, GetWorld()->GetDeltaSeconds() * 30.0f * RotationAmount));
@@ -600,7 +600,7 @@ bool ASGCharacter::CanUpdateMovingRotation()
     return ((IsMoving && HasMovementInput) || (Speed > 150.0f)) && !HasAnyRootMotion();
 }
 
-bool ASGCharacter::MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugTrace::Type DebugType)
+bool ASGCharacter::MantleCheck(FSGMantleTraceSettings TraceSettings, EDrawDebugTrace::Type DebugType)
 {
     DebugType = GetTraceDebugType(DebugType);
     FVector BaseLocation = GetCapsuleBaseLocation(2.0f);

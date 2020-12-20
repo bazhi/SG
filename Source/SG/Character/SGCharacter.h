@@ -89,14 +89,14 @@ protected:
     bool CanUpdateMovingRotation();
 
     //Mantle System
-    bool MantleCheck(FGSMantleTraceSettings TraceSettings, EDrawDebugTrace::Type DebugType); //Can Climb/Vault
+    bool MantleCheck(FSGMantleTraceSettings TraceSettings, EDrawDebugTrace::Type DebugType); //Can Climb/Vault
     void MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWorldSpace, EMantleType MantleType);
     void MantleEnd();
     void MantleUpdate(float BlendIn);
     bool CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector TargetLocation, float HeightOffset, float RadiusOffset, EDrawDebugTrace::Type DebugType);
     const UDAssetMantle* GetMantleAsset(EMantleType MantleType) const;
 
-    //RagdollSystem
+    //Ragdoll System
     void RagdollStart();
     void RagdollEnd();
     void RagdollUpdate();
@@ -221,7 +221,7 @@ protected:
     float YawOffset = 0;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
-    FGSMantleParams MantleParams;
+    FSGMantleParams MantleParams;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
     FGSComponentAndTransform MantleLedgeLocalSpace;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Mantle System")
@@ -231,11 +231,11 @@ protected:
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Mantle System")
     FTransform MantleAnimatedStartOffset;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
-    FGSMantleTraceSettings GroundedTraceSettings;
+    FSGMantleTraceSettings GroundedTraceSettings;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
-    FGSMantleTraceSettings AutomaticTraceSettings;
+    FSGMantleTraceSettings AutomaticTraceSettings;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
-    FGSMantleTraceSettings FallingTraceSettings;
+    FSGMantleTraceSettings FallingTraceSettings;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mantle System")
     TMap<EMantleType, UDAssetMantle*> MantleAssetMap;
 
