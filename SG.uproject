@@ -12,7 +12,7 @@
 				"Engine",
 				"CoreUObject",
 				"AnimGraphRuntime"
-			]
+            ]
 		},
         {
             "Name": "SGEditor",

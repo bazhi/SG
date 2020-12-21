@@ -4,6 +4,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "SG/Subsystem/ConfigWorldSubsystem.h"
 #include "KismetAnimationLibrary.h"
+#include "SG/Core/SGName.h"
 
 void USGAnimInstance::NativeInitializeAnimation()
 {

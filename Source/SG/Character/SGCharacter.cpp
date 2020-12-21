@@ -13,6 +13,7 @@
 #include "Kismet/KismetMathLibrary.h"
 
 #include "SG/BlueprintLibrary/GSBlueprintLibrary.h"
+#include "SG/Core/SGName.h"
 #include "SG/DataAsset/TableRowDefine.h"
 #include "SG/Subsystem/ConfigGameSubsystem.h"
 
