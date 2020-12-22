@@ -34,6 +34,10 @@ namespace SGName
         SGNAME_DEF(Enable_FootIK_L);
         SGNAME_DEF(Enable_FootIK_R);
         SGNAME_DEF(Enable_Transition);
+
+        SGNAME_DEF(Weight_Gait);
+
+        SGNAME_DEF(Mask_LandPrediction);
     };
 
     namespace Bone

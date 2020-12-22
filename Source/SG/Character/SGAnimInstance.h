@@ -348,6 +348,19 @@ protected:
 
     //Movement
     FSGVelocityBlend CalculateVelocityBlend();
+    float CalculateDiagonalScaleAmount();
+    FVector CalculateRelativeAccelerationAmount();
+    float CalculateWalkRunBlend();
+    float CalculateStrideBlend();
+    float CalculateStandingPlayRate();
+    float CalculateCrouchingPlayRate();
+
+    //InAir
+    float CalculateLandPrediction();
+    FSGLeanAmount CalculateInAirLeanAmount();
+
+    //Rotation
+    EMovementDirection CalculateMovementDirection();
 
     //Curve
     float GetAnimCurveCompact(const FName& CurveName);

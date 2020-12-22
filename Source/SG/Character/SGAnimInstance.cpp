@@ -4,6 +4,9 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "SG/Subsystem/ConfigWorldSubsystem.h"
 #include "KismetAnimationLibrary.h"
+
+#include "Components/CapsuleComponent.h"
+
 #include "SG/Core/SGName.h"
 
 void USGAnimInstance::NativeInitializeAnimation()
@@ -224,11 +227,12 @@ void USGAnimInstance::TurnInPlace(const FRotator& TargetRotaion, float PlayRateS
     ETurnInPlace TargetTurn = ETurnInPlace::None;
     float TurnAngle = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotaion, Character->GetActorRotation()).Yaw;
     //Step 2: Choose Turn Asset based on the Turn Angle and Stance
-    if(FMath::Abs(TurnAngle) < Turn180Threshold)
+    if (FMath::Abs(TurnAngle) < Turn180Threshold)
     {
-        if(TurnAngle < 0)
+        if (TurnAngle < 0)
         {
-            switch (Stance) {
+            switch (Stance)
+            {
                 case EStance::Standing:
                     TargetTurn = ETurnInPlace::NL90;
                     break;
@@ -237,7 +241,8 @@ void USGAnimInstance::TurnInPlace(const FRotator& TargetRotaion, float PlayRateS
                     break;
                 default: ;
             }
-        }else
+        }
+        else
         {
             switch (Stance)
             {
@@ -247,10 +252,11 @@ void USGAnimInstance::TurnInPlace(const FRotator& TargetRotaion, float PlayRateS
                 case EStance::Crouching:
                     TargetTurn = ETurnInPlace::CLFR90;
                     break;
-                default:;
+                default: ;
             }
         }
-    }else
+    }
+    else
     {
         if (TurnAngle < 0)
         {
@@ -262,7 +268,7 @@ void USGAnimInstance::TurnInPlace(const FRotator& TargetRotaion, float PlayRateS
                 case EStance::Crouching:
                     TargetTurn = ETurnInPlace::CLFL180;
                     break;
-                default:;
+                default: ;
             }
         }
         else
@@ -275,7 +281,7 @@ void USGAnimInstance::TurnInPlace(const FRotator& TargetRotaion, float PlayRateS
                 case EStance::Crouching:
                     TargetTurn = ETurnInPlace::CLFR180;
                     break;
-                default:;
+                default: ;
             }
         }
     }
@@ -288,17 +294,18 @@ void USGAnimInstance::TurnInPlace(const FRotator& TargetRotaion, float PlayRateS
     {
         DTRowTurnInPlace = Subsystem->GetDataTableRow(Query);
     }
-    if(!DTRowTurnInPlace)
+    if (!DTRowTurnInPlace)
     {
         return;
     }
-    if(!IsPlayingSlotAnimation(DTRowTurnInPlace->Animation, DTRowTurnInPlace->SlotName) || OverrideCurrent)
+    if (!IsPlayingSlotAnimation(DTRowTurnInPlace->Animation, DTRowTurnInPlace->SlotName) || OverrideCurrent)
     {
-       UAnimMontage* AnimMontage = PlaySlotAnimationAsDynamicMontage(DTRowTurnInPlace->Animation, DTRowTurnInPlace->SlotName, 0.2, 0.2, DTRowTurnInPlace->PlayRate * PlayRateScale, 1, 0, StartTime);
-        if(DTRowTurnInPlace->ScaleTurnAngle)
+        UAnimMontage* AnimMontage = PlaySlotAnimationAsDynamicMontage(DTRowTurnInPlace->Animation, DTRowTurnInPlace->SlotName, 0.2, 0.2, DTRowTurnInPlace->PlayRate * PlayRateScale, 1, 0, StartTime);
+        if (DTRowTurnInPlace->ScaleTurnAngle)
         {
             RotationScale = (TurnAngle / DTRowTurnInPlace->AnimatedAngle) * DTRowTurnInPlace->PlayRate * PlayRateScale;
-        }else
+        }
+        else
         {
             RotationScale = DTRowTurnInPlace->PlayRate * PlayRateScale;
         }
@@ -307,14 +314,15 @@ void USGAnimInstance::TurnInPlace(const FRotator& TargetRotaion, float PlayRateS
 
 void USGAnimInstance::TurnInPlaceCheck()
 {
-    if(FMath::Abs(AimingAngle.X) > TurnCheckMinAngle && AimYawRate < AimYawRateLimit)
+    if (FMath::Abs(AimingAngle.X) > TurnCheckMinAngle && AimYawRate < AimYawRateLimit)
     {
         ElapsedDelayTime += DeltaTimeX;
-        if(ElapsedDelayTime > UKismetMathLibrary::MapRangeClamped(FMath::Abs(AimingAngle.X), TurnCheckMinAngle, 180, MinAngleDelay, MaxAngleDelay))
+        if (ElapsedDelayTime > UKismetMathLibrary::MapRangeClamped(FMath::Abs(AimingAngle.X), TurnCheckMinAngle, 180, MinAngleDelay, MaxAngleDelay))
         {
             TurnInPlace(FRotator(0, AimingRotation.Yaw, 0), 1.0, 0, false);
         }
-    }else
+    }
+    else
     {
         ElapsedDelayTime = 0.0f;
     }
@@ -325,7 +333,7 @@ void USGAnimInstance::RotateInPlaceCheck()
     RotateL = AimingAngle.X < RotateMinThreshold;
     RotateR = AimingAngle.X > RotateMaxThreshold;
 
-    if(RotateL || RotateR)
+    if (RotateL || RotateR)
     {
         RotateRate = UKismetMathLibrary::MapRangeClamped(AimYawRate, AimYawRateMinRange, AimYawRateMaxRange, MinPlayRate, MaxPlayRate);
     }
@@ -333,7 +341,7 @@ void USGAnimInstance::RotateInPlaceCheck()
 
 void USGAnimInstance::DynamicTransitionCheck()
 {
-    if(UKismetAnimationLibrary::K2_DistanceBetweenTwoSocketsAndMapRange(GetOwningComponent(), SGName::Bone::IK_Foot_L, ERelativeTransformSpace::RTS_Component, SGName::Bone::Foot_Target_L, ERelativeTransformSpace::RTS_Component, false, 0, 0, 0, 0) > 8)
+    if (UKismetAnimationLibrary::K2_DistanceBetweenTwoSocketsAndMapRange(GetOwningComponent(), SGName::Bone::IK_Foot_L, ERelativeTransformSpace::RTS_Component, SGName::Bone::Foot_Target_L, ERelativeTransformSpace::RTS_Component, false, 0, 0, 0, 0) > 8)
     {
         PlayDynamicTransition(0.1f, DynamicTransitionLeft);
     }
@@ -395,23 +403,23 @@ void USGAnimInstance::SetFootOffsets(const FName EnableFootIKCurve, const FName&
 
 void USGAnimInstance::SetPelvisIKOffset(const FVector& FootOffsetLTarget, const FVector& FootOffsetRTarget)
 {
-
     PelvisAlpha = (GetCurveValue(SGName::Curve::Enable_FootIK_L) + GetCurveValue(SGName::Curve::Enable_FootIK_L)) * 0.5f;
     if (PelvisAlpha > 0)
     {
         FVector PelvisTarget = FVector::ZeroVector;
         //Step 1: Set the new Pelvis Target to be the lowest Foot Offset
-        if(FootOffsetLTarget.Z < FootOffsetRTarget.Z)
+        if (FootOffsetLTarget.Z < FootOffsetRTarget.Z)
         {
             PelvisTarget = FootOffsetLTarget;
-        }else
+        }
+        else
         {
             PelvisTarget = FootOffsetRTarget;
         }
 
         //Step 2: Interp the Current Pelvis Offset to the new target value. Interpolate at different speeds based on whether the new target is above or below the current one.
         float InterpSpeed = 15.0f;
-        if(PelvisTarget.Z > PelvisOffset.Z)
+        if (PelvisTarget.Z > PelvisOffset.Z)
         {
             InterpSpeed = 10.0f;
         }
@@ -469,7 +477,128 @@ FSGVelocityBlend USGAnimInstance::CalculateVelocityBlend()
     FVector RelativeDirection = Dir / Sum;
     FSGVelocityBlend Result;
     Result.F = UKismetMathLibrary::Clamp(RelativeDirection.X, 0, 1.0f);
-    Result.B = FMath::Abs(UKismetMathLibrary::Clamp(RelativeDirection.X, -1, 0));
+    Result.B = FMath::Abs(UKismetMathLibrary::Clamp(RelativeDirection.X, -1.f, 0.f));
+    Result.L = FMath::Abs(UKismetMathLibrary::Clamp(RelativeDirection.Y, -1.f, 0.f));
+    Result.R = UKismetMathLibrary::Clamp(RelativeDirection.Y, 0.f, 1.f);
 
     return Result;
+}
+
+float USGAnimInstance::CalculateDiagonalScaleAmount()
+{
+    //Calculate the Diagnal Scale Amount. This value is used to scale the Foot IK Root bone to make the Foot IK bones cover more distance on the diagonal blends. Without scaling, the feet would not move far enough on the diagonal direction due to the linear translational blending of the IK bones. The curve is used to easily map the value.
+    if (DiagonalScaleAmountCurve)
+    {
+        float InTime = FMath::Abs(VelocityBlend.F + VelocityBlend.B);
+        return DiagonalScaleAmountCurve->GetFloatValue(InTime);
+    }
+    return 0;
+}
+
+FVector USGAnimInstance::CalculateRelativeAccelerationAmount()
+{
+    float Dot = FVector::DotProduct(Acceleration, Velocity);
+    if (Dot > 0)
+    {
+        float MaxAcceleration = Character->GetCharacterMovement()->GetMaxAcceleration();
+        return Character->GetActorRotation().UnrotateVector(Acceleration.GetClampedToMaxSize(MaxAcceleration) / MaxAcceleration);
+    }
+    else
+    {
+        float MaxBrakingDeceleration = Character->GetCharacterMovement()->GetMaxBrakingDeceleration();
+        return Character->GetActorRotation().UnrotateVector(Acceleration.GetClampedToMaxSize(MaxBrakingDeceleration) / MaxBrakingDeceleration);
+    }
+}
+
+float USGAnimInstance::CalculateWalkRunBlend()
+{
+    float Result = 0;
+    switch (Gait)
+    {
+        case EGait::Walking:
+            Result = 0;
+            break;
+        case EGait::Running:
+        case EGait::Sprinting:
+            Result = 1;
+            break;
+        default: ;
+    }
+    return Result;
+}
+
+float USGAnimInstance::CalculateStrideBlend()
+{
+    if (StrideBlendNWalk && StrideBlendNRun && StrideBlendCWalk)
+    {
+        float NWalk = StrideBlendNWalk->GetFloatValue(Speed);
+        float NRun = StrideBlendNRun->GetFloatValue(Speed);
+        float Weight = GetAnimCurveClamped(SGName::Curve::Weight_Gait, -1, 0, 1);
+        float CWalk = StrideBlendCWalk->GetFloatValue(Speed);
+        float CLF = GetCurveValue(SGName::Curve::BasePose_CLF);
+        float LerpValue = FMath::Lerp(NWalk, NRun, Weight);
+        return FMath::Lerp(LerpValue, CWalk, CLF);
+    }
+    return 0;
+}
+
+float USGAnimInstance::CalculateStandingPlayRate()
+{
+    float A = Speed / AnimatedWalkSpeed;
+    float B = Speed / AnimatedRunSpeed;
+
+    float ResultA = FMath::Lerp(A, B, GetAnimCurveClamped(SGName::Curve::Weight_Gait, -1.f, 0.f, 1.f));
+    float ResultB = Speed / AnimatedSprintSpeed;
+
+    float LerpValue = FMath::Lerp(ResultA, ResultB, GetAnimCurveClamped(SGName::Curve::Weight_Gait, -2.f, 0.f, 1.f));
+    float VauleToClamp = (LerpValue / StrideBlend) / GetOwningComponent()->GetComponentScale().Z;
+    return FMath::Clamp(VauleToClamp, 0.f, 3.f);
+}
+
+float USGAnimInstance::CalculateCrouchingPlayRate()
+{
+    return FMath::Clamp(Speed / AnimatedCrouchSpeed / StrideBlend / GetOwningComponent()->GetComponentScale().Z, 0.f, 2.f);
+}
+
+float USGAnimInstance::CalculateLandPrediction()
+{
+    UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+    if (FallSpeed < -200.0f && Capsule && LandPredictionCurve)
+    {
+        FVector Start = Capsule->GetComponentLocation();
+        float Radius = Capsule->GetUnscaledCapsuleRadius();
+        float HalfHeight = Capsule->GetUnscaledCapsuleHalfHeight();
+
+        FVector ToNormal = Velocity;
+        ToNormal.Z = FMath::Clamp(Velocity.Z, -4000.f, -200.f);
+        float Scale = UKismetMathLibrary::MapRangeClamped(Velocity.Z, 0.f, -4000.f, 50.f, 2000.f);
+        FVector End = ToNormal.GetSafeNormal() * Scale;
+
+        FHitResult HitResult;
+        TArray<AActor*> ActorToIgnore;
+        UKismetSystemLibrary::CapsuleTraceSingleByProfile(this, Start, End, Radius, HalfHeight, "SGCharacter", false, ActorToIgnore, GetTraceDebugType(EDrawDebugTrace::ForOneFrame), HitResult, true);
+        if (HitResult.bBlockingHit && Character->GetCharacterMovement()->IsWalkable(HitResult))
+        {
+            return FMath::Lerp(LandPredictionCurve->GetFloatValue(HitResult.Time), 0.f, GetCurveValue(SGName::Curve::Mask_LandPrediction));
+        }
+    }
+    return 0;
+}
+
+
+FSGLeanAmount USGAnimInstance::CalculateInAirLeanAmount()
+{
+    FSGLeanAmount LocalLeanAmount;
+
+    if (LeanInAirCurve)
+    {
+        FVector Vel = Character->GetActorRotation().UnrotateVector(Velocity) / 350.f;
+        FVector2D Vel2D(Vel.Y, Vel.X);
+
+        FVector2D Result = Vel2D * LeanInAirCurve->GetFloatValue(FallSpeed);
+        LocalLeanAmount.LR = Result.X;
+        LocalLeanAmount.FB = Result.Y;
+    }
+
+    return LocalLeanAmount;
 }
