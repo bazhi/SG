@@ -229,22 +229,6 @@ protected:
     float MinAngleDelay = 0.75f;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
     float MaxAngleDelay = 0;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
-    FSGTurnInPlaceAsset NTurnIPL90;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
-    FSGTurnInPlaceAsset NTurnIPR90;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
-    FSGTurnInPlaceAsset NTurnIPL180;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
-    FSGTurnInPlaceAsset NTurnIPR180;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
-    FSGTurnInPlaceAsset CLFTurnIPL90;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
-    FSGTurnInPlaceAsset CLFTurnIPR90;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
-    FSGTurnInPlaceAsset CLFTurnIPL180;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Turn In Place")
-    FSGTurnInPlaceAsset CLFTurnIPR180;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rotate In Place")
     float RotateMinThreshold = -50;

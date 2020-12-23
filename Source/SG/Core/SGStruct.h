@@ -43,23 +43,6 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSGTurnInPlaceAsset
-{
-    GENERATED_BODY()
-public:
-    UPROPERTY(EditDefaultsOnly)
-    class UAnimSequenceBase* Animation = nullptr;
-    UPROPERTY(EditDefaultsOnly)
-    float AnimatedAngle = 0;
-    UPROPERTY(EditDefaultsOnly)
-    FName SlotName = "None";
-    UPROPERTY(EditDefaultsOnly)
-    float PlayRate = 1.0f;
-    UPROPERTY(EditDefaultsOnly)
-    bool ScaleTurnAngle = true;
-};
-
-USTRUCT(BlueprintType)
 struct FGSComponentAndTransform
 {
     GENERATED_BODY()
