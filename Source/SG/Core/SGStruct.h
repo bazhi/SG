@@ -23,6 +23,18 @@ USTRUCT(BlueprintType)
 struct FSGLeanAmount
 {
     GENERATED_BODY()
+
+    FSGLeanAmount()
+    {
+        
+    }
+
+    FSGLeanAmount(float InLR, float InFB)
+    {
+        LR = InLR;
+        FB = InFB;
+    }
+
 public:
     UPROPERTY(EditDefaultsOnly)
     float LR = 0;

@@ -7,6 +7,9 @@
 
 #include "Components/CapsuleComponent.h"
 
+#include "Curves/CurveVector.h"
+
+
 #include "SG/Core/SGName.h"
 
 void USGAnimInstance::NativeInitializeAnimation()
@@ -161,25 +164,78 @@ void USGAnimInstance::UpdateLayerValues()
     ArmRMS = 1.0f - FMath::Floor(ArmRLS);
 }
 
+void USGAnimInstance::UpdateFootIK()
+{
+    SetFootLocking(SGName::Curve::Enable_FootIK_L, SGName::Curve::FootLock_L, SGName::Bone::IK_Foot_L, FootLockLAlpha, FootLockLLocation, FootLockLRotation);
+    SetFootLocking(SGName::Curve::Enable_FootIK_R, SGName::Curve::FootLock_R, SGName::Bone::IK_Foot_R, FootLockRAlpha, FootLockRLocation, FootLockLRotation);
+
+    switch (MovementState)
+    {
+        case EMovementState::None:
+        case EMovementState::Mantling:
+        case EMovementState::Grounded:
+        {
+            FVector FootOffsetLTarget;
+            FVector FootOffsetRTarget;
+            SetFootOffsets(SGName::Curve::Enable_FootIK_L, SGName::Bone::IK_Foot_L, SGName::Bone::Root, FootOffsetLTarget, FootOffsetLLocation, FootOffsetLRotation);
+            SetFootOffsets(SGName::Curve::Enable_FootIK_R, SGName::Bone::IK_Foot_R, SGName::Bone::Root, FootOffsetRTarget, FootOffsetRLocation, FootOffsetRRotation);
+            SetPelvisIKOffset(FootOffsetLTarget, FootOffsetRTarget);
+        }
+            break;
+        case EMovementState::InAir:
+            SetPelvisIKOffset(FVector::ZeroVector, FVector::ZeroVector);
+            ResetIKOffsets();
+            break;
+
+        case EMovementState::Ragdoll:
+            break;
+        default: ;
+    }
+}
+
 void USGAnimInstance::UpdateMovementValues()
 {
+    VelocityBlend = InterpVelocityBlend(VelocityBlend, CalculateVelocityBlend(), VelocityBlendInterpSpeed, DeltaTimeX);
+    DiagonalScaleAmount = CalculateDiagonalScaleAmount();
+    RelativeAccelerationAmount = CalculateRelativeAccelerationAmount();
+    LeanAmount = InterpLeanAmount(LeanAmount, FSGLeanAmount(RelativeAccelerationAmount.Y, RelativeAccelerationAmount.X), GroundedLeanInterpSpeed, DeltaTimeX);
+
+    WalkRunBlend = CalculateWalkRunBlend();
+    StrideBlend = CalculateStrideBlend();
+    StandingPlayRate = CalculateStandingPlayRate();
+    CrouchingPlayRate = CalculateCrouchingPlayRate();
 }
 
 void USGAnimInstance::UpdateRotationValues()
 {
+    MovementDirection = CalculateMovementDirection();
+    if(YawOffsetFB && YawOffsetLR)
+    {
+        FRotator Rotation = UKismetMathLibrary::NormalizedDeltaRotator(Velocity.ToOrientationRotator(), Character->GetControlRotation());
+        FVector FB = YawOffsetFB->GetVectorValue(Rotation.Yaw);
+        FVector LR = YawOffsetLR->GetVectorValue(Rotation.Yaw);
+        FYaw = FB.X;
+        BYaw = FB.Y;
+        LYaw = LR.X;
+        RYaw = LR.Y;
+    }
+
 }
 
 void USGAnimInstance::UpdateInAirValues()
 {
+    FallSpeed = Velocity.Z;
+    LandPrediction = CalculateLandPrediction();
+    LeanAmount = InterpLeanAmount(LeanAmount, CalculateInAirLeanAmount(), InAirLeanInterpSpeed, DeltaTimeX);
 }
 
 void USGAnimInstance::UpdateRagdollValues()
 {
+    float Length = GetOwningComponent()->GetPhysicsLinearVelocity(SGName::Bone::Root).Size();
+    FlailRate = UKismetMathLibrary::MapRangeClamped(Length, 0.f, 1000.f, 0.f, 1.f);
 }
 
-void USGAnimInstance::UpdateFootIK()
-{
-}
+
 
 bool USGAnimInstance::ShouldMoveCheck() const
 {
@@ -470,6 +526,14 @@ void USGAnimInstance::SetFootLockOffsets(FVector& LocalLocation, FRotator& Local
     LocalRotation = UKismetMathLibrary::NormalizedDeltaRotator(LocalRotation, RotationDifference);
 }
 
+void USGAnimInstance::ResetIKOffsets()
+{
+    FootOffsetLLocation = FMath::VInterpTo(FootOffsetLLocation, FVector::ZeroVector, DeltaTimeX, 15.f);
+    FootLockRLocation = FMath::VInterpTo(FootLockRLocation, FVector::ZeroVector, DeltaTimeX, 15.f);
+    FootOffsetLRotation = FMath::RInterpTo(FootOffsetLRotation, FRotator::ZeroRotator, DeltaTimeX, 15.f);
+    FootOffsetLRotation = FMath::RInterpTo(FootOffsetLRotation, FRotator::ZeroRotator, DeltaTimeX, 15.f);
+}
+
 FSGVelocityBlend USGAnimInstance::CalculateVelocityBlend()
 {
     FVector Dir = Character->GetActorRotation().UnrotateVector(Velocity.GetSafeNormal(0.1));
@@ -601,4 +665,70 @@ FSGLeanAmount USGAnimInstance::CalculateInAirLeanAmount()
     }
 
     return LocalLeanAmount;
+}
+
+EMovementDirection USGAnimInstance::CalculateMovementDirection()
+{
+    if (EGait::Sprinting == Gait)
+    {
+        return EMovementDirection::Forward;
+    }
+
+    if (ERotationMode::VelocityDirection == RotationMode)
+    {
+        return EMovementDirection::Forward;
+    }
+
+    FRotator Rotation = UKismetMathLibrary::NormalizedDeltaRotator(Velocity.ToOrientationRotator(), AimingRotation);
+    return CalculateQuadrant(MovementDirection, 70.f, -70.f, 110.f, -110.f, 5.0f, Rotation.Yaw);
+}
+
+EMovementDirection USGAnimInstance::CalculateQuadrant(EMovementDirection Current, float FR, float FL, float BR, float BL, float Buffer, float Angle)
+{
+    if (AngleInRange(Angle, FL, FR, Buffer, EMovementDirection::Forward != Current && EMovementDirection::Backward != Current))
+    {
+        return EMovementDirection::Forward;
+    }
+
+    if (AngleInRange(Angle, FR, BR, Buffer, EMovementDirection::Right != Current && EMovementDirection::Left != Current))
+    {
+        return EMovementDirection::Right;
+    }
+
+    if (AngleInRange(Angle, BL, FL, Buffer, EMovementDirection::Right != Current && EMovementDirection::Left != Current))
+    {
+        return EMovementDirection::Left;
+    }
+
+    return EMovementDirection::Backward;
+}
+
+bool USGAnimInstance::AngleInRange(float Angle, float MinAngle, float MaxAngle, float Buffer, bool bIncrease)
+{
+    if (bIncrease)
+    {
+        return UKismetMathLibrary::InRange_FloatFloat(Angle, MinAngle - Buffer, MaxAngle + Buffer);
+    }
+
+    return UKismetMathLibrary::InRange_FloatFloat(Angle, MinAngle + Buffer, MaxAngle - Buffer);
+}
+
+FSGVelocityBlend USGAnimInstance::InterpVelocityBlend(FSGVelocityBlend Current, FSGVelocityBlend Target, float InterpSpeed, float DeltaTime)
+{
+    FSGVelocityBlend Result;
+
+    Result.F = FMath::FInterpTo(Current.F, Target.F, DeltaTime, InterpSpeed);
+    Result.B = FMath::FInterpTo(Current.B, Target.B, DeltaTime, InterpSpeed);
+    Result.L = FMath::FInterpTo(Current.L, Target.L, DeltaTime, InterpSpeed);
+    Result.R = FMath::FInterpTo(Current.R, Target.R, DeltaTime, InterpSpeed);
+
+    return Result;
+}
+
+FSGLeanAmount USGAnimInstance::InterpLeanAmount(FSGLeanAmount Current, FSGLeanAmount Target, float InterpSpeed, float DeltaTime)
+{
+    FSGLeanAmount Result;
+    Result.LR = FMath::FInterpTo(Current.LR, Target.LR, DeltaTime, InterpSpeed);
+    Result.FB = FMath::FInterpTo(Current.FB, Target.FB, DeltaTime, InterpSpeed);
+    return Result;
 }

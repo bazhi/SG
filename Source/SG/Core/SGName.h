@@ -46,5 +46,6 @@ namespace SGName
         SGNAME_DEF_GROUP(IK_Foot_R, ik_foot_r);
         SGNAME_DEF_GROUP(Foot_Target_L, VB foot_target_l);
         SGNAME_DEF_GROUP(Foot_Target_R, VB foot_target_r);
+        SGNAME_DEF_GROUP(Root, root);
     };
 };
