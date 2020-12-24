@@ -153,7 +153,7 @@ protected:
     class UTimelineComponent* MantleTimeline;
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "References")
-    class UAnimInstance* MainAnimInstance;
+    class USGAnimInstance* MainAnimInstance;
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Input")
     ERotationMode DesiredRotationMode = ERotationMode::LookingDirection;

@@ -2,6 +2,8 @@
 
 #include "Components/CapsuleComponent.h"
 #include "GSInputName.h"
+#include "SGAnimInstance.h"
+
 #include "Components/TimelineComponent.h"
 
 #include "Curves/CurveVector.h"
@@ -40,7 +42,7 @@ void ASGCharacter::OnBeginPlay()
     if (auto MeshTemp = GetMesh())
     {
         MeshTemp->AddTickPrerequisiteActor(this);
-        MainAnimInstance = MeshTemp->GetAnimInstance();
+        MainAnimInstance = Cast<USGAnimInstance>(MeshTemp->GetAnimInstance());
         SetMovementModel();
     }
     OnGaitChanged(DesiredGait);
@@ -97,7 +99,7 @@ void ASGCharacter::OnJumped_Implementation()
     }
     if (MainAnimInstance)
     {
-        //MainAnimInstance->Jum
+        MainAnimInstance->OnJumped();
     }
 }
 
