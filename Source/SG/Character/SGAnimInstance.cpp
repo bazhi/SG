@@ -12,6 +12,23 @@
 
 #include "SG/Core/SGName.h"
 
+void USGAnimInstance::OnJumped()
+{
+    bJumped = true;
+    JumpPlayRate = UKismetMathLibrary::MapRangeClamped(Speed, 0, 600, 1.2, 1.5);
+    JumpedDelay = 0.1f;
+}
+
+void USGAnimInstance::SetGroundedEntryState(EGroundedEntryState InGroundedEntryState)
+{
+    GroundedEntryState = InGroundedEntryState;
+}
+
+void USGAnimInstance::SetOverlayOverrideState(EOverlayState InOverlayOverrideState)
+{
+    OverlayOverrideState = InOverlayOverrideState;
+}
+
 void USGAnimInstance::NativeInitializeAnimation()
 {
     Super::NativeInitializeAnimation();
@@ -24,6 +41,12 @@ void USGAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
     DeltaTimeX = DeltaSeconds;
     if (DeltaTimeX > 0.0f && IsValid(Character))
     {
+        if(bJumped)
+        {
+            JumpedDelay -= DeltaSeconds;
+            bJumped = JumpedDelay > 0.f;
+        }
+
         UpdateCharacterInfo();
         UpdateAimingValues();
         UpdateLayerValues();
@@ -35,15 +58,15 @@ void USGAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
                 break;
             case EMovementState::Grounded:
             {
-                bool bPreShouldMove = ShouldMove;
-                ShouldMove = ShouldMoveCheck();
-                if (ShouldMove && !bPreShouldMove)
+                bool bPreShouldMove = bShouldMove;
+                bShouldMove = ShouldMoveCheck();
+                if (bShouldMove && !bPreShouldMove)
                 {
                     ElapsedDelayTime = 0;
-                    RotateL = false;
-                    RotateR = false;
+                    bRotateL = false;
+                    bRotateR = false;
                 }
-                if (ShouldMove)
+                if (bShouldMove)
                 {
                     UpdateMovementValues();
                     UpdateRotationValues();
@@ -56,8 +79,8 @@ void USGAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
                     }
                     else
                     {
-                        RotateL = false;
-                        RotateR = false;
+                        bRotateL = false;
+                        bRotateR = false;
                     }
                     if (CanTurnInPlace())
                     {
@@ -87,14 +110,25 @@ void USGAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
     }
 }
 
+bool USGAnimInstance::HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent)
+{
+    return Super::HandleNotify(AnimNotifyEvent);
+}
+
+void USGAnimInstance::PlayTransition(const FSGDynamicMontageParams& Params)
+{
+    PlaySlotAnimationAsDynamicMontage(Params.Animation, SGName::Slot::GroundedSlot, Params.BlendInTime, Params.BlendOutTime, Params.PlayRate, 1, 0, Params.StartTime);
+}
+
 void USGAnimInstance::PlayDynamicTransition(float ReTriggerDelay, const FSGDynamicMontageParams& Params)
 {
+
 }
 
 void USGAnimInstance::UpdateCharacterInfo()
 {
     //Get Information from the Character via the Character Interface to use throughout the AnimBP and AnimGraph.
-    Character->GetEssentialValues(Velocity, Acceleration, MovementInput, IsMoving, HasMovementInput, Speed, MovementInputAmount, AimingRotation, AimYawRate);
+    Character->GetEssentialValues(Velocity, Acceleration, MovementInput, bIsMoving, bHasMovementInput, Speed, MovementInputAmount, AimingRotation, AimYawRate);
     EMovementMode MovementMode;
     Character->GetCurrentStates(MovementMode, MovementState, PrevMovementState, MovementAction, RotationMode, Gait, Stance, ViewMode, OverlayState);
 }
@@ -131,7 +165,7 @@ void USGAnimInstance::UpdateAimingValues()
     //Get the delta between the Movement Input rotation and Actor rotation and map it to a range of 0-1. This value is used in the aim offset behavior to make the character look toward the Movement Input.
     if (ERotationMode::VelocityDirection == RotationMode)
     {
-        if (HasMovementInput)
+        if (bHasMovementInput)
         {
             LocalRotation = UKismetMathLibrary::NormalizedDeltaRotator(MovementInput.ToOrientationRotator(), Character->GetActorRotation());
             float ClampedValue = UKismetMathLibrary::MapRangeClamped(LocalRotation.Yaw, -180, 180, 0, 1.0);
@@ -239,7 +273,7 @@ void USGAnimInstance::UpdateRagdollValues()
 
 bool USGAnimInstance::ShouldMoveCheck() const
 {
-    return IsMoving && HasMovementInput || Speed > 150.0f;
+    return bIsMoving && bHasMovementInput || Speed > 150.0f;
 }
 
 bool USGAnimInstance::CanRotateInPlace() const
@@ -259,7 +293,7 @@ bool USGAnimInstance::CanDynamicTransition() const
 
 bool USGAnimInstance::CanOverlayTransition() const
 {
-    return EStance::Standing == Stance && !ShouldMove;
+    return EStance::Standing == Stance && !bShouldMove;
 }
 
 float USGAnimInstance::GetAnimCurveCompact(const FName& CurveName)
@@ -386,10 +420,10 @@ void USGAnimInstance::TurnInPlaceCheck()
 
 void USGAnimInstance::RotateInPlaceCheck()
 {
-    RotateL = AimingAngle.X < RotateMinThreshold;
-    RotateR = AimingAngle.X > RotateMaxThreshold;
+    bRotateL = AimingAngle.X < RotateMinThreshold;
+    bRotateR = AimingAngle.X > RotateMaxThreshold;
 
-    if (RotateL || RotateR)
+    if (bRotateL || bRotateR)
     {
         RotateRate = UKismetMathLibrary::MapRangeClamped(AimYawRate, AimYawRateMinRange, AimYawRateMaxRange, MinPlayRate, MaxPlayRate);
     }

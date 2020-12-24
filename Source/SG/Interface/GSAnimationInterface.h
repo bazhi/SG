@@ -24,7 +24,7 @@ class SG_API IGSAnimationInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void Jumped();
-	virtual void SetGroundedEntryState(EGroundedEntryState GroundedEntryState);
-	virtual void SetOverlayOverrideState(EOverlayState OverlayOverrideState);
+	virtual void OnJumped();
+	virtual void SetGroundedEntryState(EGroundedEntryState InGroundedEntryState);
+	virtual void SetOverlayOverrideState(EOverlayState InOverlayOverrideState);
 };

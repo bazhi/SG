@@ -48,4 +48,9 @@ namespace SGName
         SGNAME_DEF_GROUP(Foot_Target_R, VB foot_target_r);
         SGNAME_DEF_GROUP(Root, root);
     };
+
+    namespace Slot
+    {
+        SGNAME_DEF_GROUP(GroundedSlot, Grounded Slot);
+    }
 };

@@ -4,14 +4,14 @@
 #include "GSAnimationInterface.h"
 
 // Add default functionality here for any IGSAnimationInterface functions that are not pure virtual.
-void IGSAnimationInterface::Jumped()
+void IGSAnimationInterface::OnJumped()
 {
 }
 
-void IGSAnimationInterface::SetGroundedEntryState(EGroundedEntryState GroundedEntryState)
+void IGSAnimationInterface::SetGroundedEntryState(EGroundedEntryState InGroundedEntryState)
 {
 }
 
-void IGSAnimationInterface::SetOverlayOverrideState(EOverlayState OverlayOverrideState)
+void IGSAnimationInterface::SetOverlayOverrideState(EOverlayState InOverlayOverrideState)
 {
 }

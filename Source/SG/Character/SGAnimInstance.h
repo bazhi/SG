@@ -5,6 +5,8 @@
 #include "ECharacter.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+#include "SG/Interface/GSAnimationInterface.h"
+
 
 #include "SGAnimInstance.generated.h"
 
@@ -12,7 +14,7 @@
  * 
  */
 UCLASS()
-class SG_API USGAnimInstance : public UAnimInstance
+class SG_API USGAnimInstance : public UAnimInstance, public IGSAnimationInterface
 {
     GENERATED_BODY()
 protected:
@@ -35,9 +37,9 @@ protected:
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Character Infomation")
     FVector MovementInput = FVector::ZeroVector;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Character Infomation")
-    bool IsMoving = false;
+    bool bIsMoving = false;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Character Infomation")
-    bool HasMovementInput = false;
+    bool bHasMovementInput = false;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Character Infomation")
     float Speed = 0;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "Character Infomation")
@@ -73,13 +75,13 @@ protected:
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Grounded")
     FVector RelativeAccelerationAmount = FVector::ZeroVector;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Grounded")
-    bool ShouldMove = false;
+    bool bShouldMove = false;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Grounded")
-    bool RotateL = false;
+    bool bRotateL = false;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Grounded")
-    bool RotateR = false;
+    bool bRotateR = false;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Grounded")
-    bool Pivot = false;
+    bool bPivot = false;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Grounded")
     float RotateRate = 1.0f;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Grounded")
@@ -109,7 +111,7 @@ protected:
 
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph In Air")
-    bool Jumped = false;
+    bool bJumped = false;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AnimGraph In Air")
     float JumpPlayRate = 1.2f;
     UPROPERTY(BlueprintReadOnly, Category = "AnimGraph In Air")
@@ -143,7 +145,7 @@ protected:
 
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
-    int OverlayOverrideState = 0;
+    EOverlayState OverlayOverrideState = EOverlayState::Default;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
     float EnableAimOffset = 0;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
@@ -292,14 +294,27 @@ protected:
     FSGDynamicMontageParams DynamicTransitionLeft;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Grounded")
     FSGDynamicMontageParams DynamicTransitionRight;
+
+protected:
+    float JumpedDelay = 0.0f;
+
 #pragma endregion
+
+public:
+    virtual void OnJumped() override;
+    virtual void SetGroundedEntryState(EGroundedEntryState InGroundedEntryState) override;
+    virtual void SetOverlayOverrideState(EOverlayState InOverlayOverrideState) override;
 
 public:
     virtual void NativeInitializeAnimation() override;
     virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 protected:
+    virtual bool HandleNotify(const FAnimNotifyEvent& AnimNotifyEvent) override;
+
+protected:
     //EventGraph
+    void PlayTransition(const FSGDynamicMontageParams& Params);
     void PlayDynamicTransition(float ReTriggerDelay, const FSGDynamicMontageParams& Params);
 
 protected:
