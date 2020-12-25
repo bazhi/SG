@@ -12,6 +12,6 @@ void IGSAnimationInterface::SetGroundedEntryState(EGroundedEntryState InGrounded
 {
 }
 
-void IGSAnimationInterface::SetOverlayOverrideState(EOverlayState InOverlayOverrideState)
+void IGSAnimationInterface::SetOverlayOverrideState(EOverlayOverrideState InOverlayOverrideState)
 {
 }

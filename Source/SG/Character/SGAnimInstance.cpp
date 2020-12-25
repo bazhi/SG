@@ -24,7 +24,7 @@ void USGAnimInstance::SetGroundedEntryState(EGroundedEntryState InGroundedEntryS
     GroundedEntryState = InGroundedEntryState;
 }
 
-void USGAnimInstance::SetOverlayOverrideState(EOverlayState InOverlayOverrideState)
+void USGAnimInstance::SetOverlayOverrideState(EOverlayOverrideState InOverlayOverrideState)
 {
     OverlayOverrideState = InOverlayOverrideState;
 }

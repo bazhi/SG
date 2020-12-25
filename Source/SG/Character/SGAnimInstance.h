@@ -145,7 +145,7 @@ protected:
 
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
-    EOverlayState OverlayOverrideState = EOverlayState::Default;
+    EOverlayOverrideState OverlayOverrideState = EOverlayOverrideState::Default;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
     float EnableAimOffset = 0;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
@@ -303,7 +303,7 @@ protected:
 public:
     virtual void OnJumped() override;
     virtual void SetGroundedEntryState(EGroundedEntryState InGroundedEntryState) override;
-    virtual void SetOverlayOverrideState(EOverlayState InOverlayOverrideState) override;
+    virtual void SetOverlayOverrideState(EOverlayOverrideState InOverlayOverrideState) override;
 
 public:
     virtual void NativeInitializeAnimation() override;

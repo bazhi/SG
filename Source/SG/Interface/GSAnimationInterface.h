@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "GSAnimationInterface.generated.h"
 
+enum class EOverlayOverrideState : unsigned char;
 enum class EOverlayState : unsigned char;
 enum class EGroundedEntryState : unsigned char;
 // This class does not need to be modified.
@@ -26,5 +27,5 @@ class SG_API IGSAnimationInterface
 public:
 	virtual void OnJumped();
 	virtual void SetGroundedEntryState(EGroundedEntryState InGroundedEntryState);
-	virtual void SetOverlayOverrideState(EOverlayState InOverlayOverrideState);
+	virtual void SetOverlayOverrideState(EOverlayOverrideState InOverlayOverrideState);
 };

@@ -138,3 +138,12 @@ enum class ETurnInPlace : uint8
     CLFL180,
     CLFR180,
 };
+
+UENUM(BlueprintType)
+enum class EOverlayOverrideState : uint8
+{
+    Default,
+    Mantle,
+    Roll,
+    GetUp,
+};
