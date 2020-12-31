@@ -23,7 +23,7 @@ protected:
     UPROPERTY(Transient, BlueprintReadOnly, Category = "References")
     class ASGCharacter* Character = nullptr;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "References")
-    float DeltaTimeX = 0;
+    float DeltaTimeX = 0.010448;
 
 
     UPROPERTY(Transient, BlueprintReadOnly, Category="Character Infomation")
@@ -147,9 +147,9 @@ protected:
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
     EOverlayOverrideState OverlayOverrideState = EOverlayOverrideState::Default;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
-    float EnableAimOffset = 0;
+    float EnableAimOffset = 1.0f;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
-    float BasePoseN = 0;
+    float BasePoseN = 1.0f;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
     float BasePoseCLF = 0;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
@@ -189,9 +189,9 @@ protected:
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
     float HeadAdd = 0;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
-    float EnableHandIKL = 0;
+    float EnableHandIKL = 1.0f;
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Layer Blending")
-    float EnableHandIKR = 0;
+    float EnableHandIKR = 1.0f;
 
 
     UPROPERTY(Transient, BlueprintReadOnly, Category = "AnimGraph Foot Ik")
