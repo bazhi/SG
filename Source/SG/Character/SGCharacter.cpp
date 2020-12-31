@@ -361,7 +361,7 @@ void ASGCharacter::UpdateDynamicMovementSettings(EGait AllowedGait)
 
 void ASGCharacter::UpdateMovementSetting()
 {
-    if (DTRowMovementSetting != nullptr || DTRowMovementSetting->RotationMode != RotationMode || DTRowMovementSetting->Stance != Stance)
+    if(DTRowMovementSetting != nullptr && (DTRowMovementSetting->RotationMode != RotationMode || DTRowMovementSetting->Stance != Stance))
     {
         FDTRowMovementSetting Query;
         Query.RotationMode = RotationMode;
