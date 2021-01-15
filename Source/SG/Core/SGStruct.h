@@ -115,6 +115,16 @@ public:
     float StartTime = 0;
 };
 
+USTRUCT()
+struct FSGDynamicMontageTask
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(Transient)
+    FSGDynamicMontageParams Params;
+    float DelayTime = 0;
+};
+
 USTRUCT(BlueprintType)
 struct FSGMantleParams
 {

@@ -4,10 +4,7 @@
 #include "Animation/AnimInstance.h"
 #include "ECharacter.h"
 #include "Kismet/KismetSystemLibrary.h"
-
 #include "SG/Interface/GSAnimationInterface.h"
-
-
 #include "SGAnimInstance.generated.h"
 
 /**
@@ -295,6 +292,8 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config|Grounded")
     FSGDynamicMontageParams DynamicTransitionRight;
 
+    UPROPERTY(Transient)
+    TArray<FSGDynamicMontageTask> MontageTasks;
 protected:
     float JumpedDelay = 0.0f;
 
@@ -316,7 +315,7 @@ protected:
     //EventGraph
     void PlayTransition(const FSGDynamicMontageParams& Params);
     void PlayDynamicTransition(float ReTriggerDelay, const FSGDynamicMontageParams& Params);
-
+    void TickMontageTasks(float DeltaSeconds);
 protected:
     void UpdateCharacterInfo();
     void UpdateAimingValues();

@@ -41,7 +41,8 @@ void USGAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
     DeltaTimeX = DeltaSeconds;
     if (DeltaTimeX > 0.0f && IsValid(Character))
     {
-        if(bJumped)
+        TickMontageTasks(DeltaSeconds);
+        if (bJumped)
         {
             JumpedDelay -= DeltaSeconds;
             bJumped = JumpedDelay > 0.f;
@@ -122,7 +123,26 @@ void USGAnimInstance::PlayTransition(const FSGDynamicMontageParams& Params)
 
 void USGAnimInstance::PlayDynamicTransition(float ReTriggerDelay, const FSGDynamicMontageParams& Params)
 {
+    FSGDynamicMontageTask Task;
+    Task.Params = Params;
+    Task.DelayTime = ReTriggerDelay;
+    MontageTasks.Add(Task);
+}
 
+void USGAnimInstance::TickMontageTasks(float DeltaSeconds)
+{
+    if (MontageTasks.Num() > 0)
+    {
+        for (int i = MontageTasks.Num() - 1; i >= 0; --i)
+        {
+            MontageTasks[i].DelayTime -= DeltaSeconds;
+            if (MontageTasks[i].DelayTime <= 0)
+            {
+                PlayTransition(MontageTasks[i].Params);
+                MontageTasks.RemoveAt(i);
+            }
+        }
+    }
 }
 
 void USGAnimInstance::UpdateCharacterInfo()
@@ -243,7 +263,7 @@ void USGAnimInstance::UpdateMovementValues()
 void USGAnimInstance::UpdateRotationValues()
 {
     MovementDirection = CalculateMovementDirection();
-    if(YawOffsetFB && YawOffsetLR)
+    if (YawOffsetFB && YawOffsetLR)
     {
         FRotator Rotation = UKismetMathLibrary::NormalizedDeltaRotator(Velocity.ToOrientationRotator(), Character->GetControlRotation());
         FVector FB = YawOffsetFB->GetVectorValue(Rotation.Yaw);
@@ -253,7 +273,6 @@ void USGAnimInstance::UpdateRotationValues()
         LYaw = LR.X;
         RYaw = LR.Y;
     }
-
 }
 
 void USGAnimInstance::UpdateInAirValues()
@@ -268,7 +287,6 @@ void USGAnimInstance::UpdateRagdollValues()
     float Length = GetOwningComponent()->GetPhysicsLinearVelocity(SGName::Bone::Root).Size();
     FlailRate = UKismetMathLibrary::MapRangeClamped(Length, 0.f, 1000.f, 0.f, 1.f);
 }
-
 
 
 bool USGAnimInstance::ShouldMoveCheck() const
