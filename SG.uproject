@@ -13,17 +13,17 @@
 				"CoreUObject",
 				"AnimGraphRuntime",
 				"UMG"
-            ]
+			]
 		},
-        {
-            "Name": "SGEditor",
-            "Type": "Editor",
-            "LoadingPhase": "Default",
-            "AdditionalDependencies": [
-                "CoreUObject",
-                "Engine"
-            ]
-        }
+		{
+			"Name": "SGEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"CoreUObject",
+				"Engine"
+			]
+		}
 	],
 	"Plugins": [
 		{
