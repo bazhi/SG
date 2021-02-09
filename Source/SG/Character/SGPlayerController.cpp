@@ -1,9 +1,7 @@
 #include "SGPlayerController.h"
-
-#include "SGPlayerCameraManager.h"
-
-
 #include "Blueprint/WidgetBlueprintLibrary.h"
+
+#include "SG/CameraSystem/SGPlayerCameraManager.h"
 
 void ASGPlayerController::BeginPlay()
 {

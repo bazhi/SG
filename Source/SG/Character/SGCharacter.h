@@ -12,14 +12,14 @@
 #include "SG/DataAsset/DAssetMantle.h"
 #include "SG/DataAsset/TableRowDefine.h"
 #include "SG/GameInstance/SGGameInstance.h"
-#include "SG/Interface/GSCameraInterface.h"
-#include "SG/Interface/GSCharacterInterface.h"
+#include "SG/Interface/SGCameraInterface.h"
+#include "SG/Interface/SGCharacterInterface.h"
 
 
 #include "SGCharacter.generated.h"
 
 UCLASS()
-class SG_API ASGCharacter : public ACharacter, public IGSCharacterInterface, public IGSCameraInterface
+class SG_API ASGCharacter : public ACharacter, public ISGCharacterInterface, public ISGCameraInterface
 {
     GENERATED_BODY()
 
@@ -72,10 +72,10 @@ protected:
     void UpdateCharacterMovement();
     void UpdateDynamicMovementSettings(EGait AllowedGait);
     void UpdateMovementSetting();
-    float GetMappedSpeed();
+    float GetMappedSpeed() const;
     EGait GetAllowedGait();
-    EGait GetActualGait(EGait AllowedGait);
-    bool CanSprint();
+    EGait GetActualGait(EGait AllowedGait) const;
+    bool CanSprint() const;
     UAnimMontage* GetRollAnimation() const;
 
     //Rotation System
@@ -85,13 +85,13 @@ protected:
     void AddToCharacterRotation(FRotator DeltaRotation);
     void LimitRotation(float AimYawMin, float AimYawMax, float InterpSpeed);
     bool SetActorLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport, FHitResult& SweepHitResult);
-    float CalculateGroundedRotationRate();
-    bool CanUpdateMovingRotation();
+    float CalculateGroundedRotationRate() const;
+    bool CanUpdateMovingRotation() const;
 
     //Mantle System
     bool MantleCheck(FSGMantleTraceSettings TraceSettings, EDrawDebugTrace::Type DebugType); //Can Climb/Vault
     void MantleStart(float MantleHeight, FGSComponentAndTransform& MantleLedgeWorldSpace, EMantleType MantleType);
-    void MantleEnd();
+    void MantleEnd() const;
     void MantleUpdate(float BlendIn);
     bool CapsuleHasRoomCheck(UCapsuleComponent* Capsule, FVector TargetLocation, float HeightOffset, float RadiusOffset, EDrawDebugTrace::Type DebugType);
     const UDAssetMantle* GetMantleAsset(EMantleType MantleType) const;
@@ -101,10 +101,10 @@ protected:
     void RagdollEnd();
     void RagdollUpdate();
     void SetActorLocationDuringRagdoll();
-    UAnimMontage* GetUpAnimation(bool bRagdollFaceUp);
+    UAnimMontage* GetUpAnimation(bool bRagdollFaceUp) const;
     //Debug
-    void DrawDebugShapes();
-    EDrawDebugTrace::Type GetTraceDebugType(EDrawDebugTrace::Type DebugType);
+    void DrawDebugShapes() const;
+    EDrawDebugTrace::Type GetTraceDebugType(EDrawDebugTrace::Type DebugType) const;
 
     //Events
     void OnBeginPlay();
@@ -114,8 +114,8 @@ protected:
     virtual void OnJumped_Implementation() override;
     virtual void Landed(const FHitResult& Hit) override;
 
-    void BreakFallEvent();
-    void RollEvent();
+    void BreakFallEvent() const;
+    void RollEvent() const;
 
     virtual void SetMovementState(EMovementState NewMovementState) override;
     virtual void SetMovementAction(EMovementAction NewMovementAction) override;

@@ -4,14 +4,14 @@
 #include "Animation/AnimInstance.h"
 #include "ECharacter.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "SG/Interface/GSAnimationInterface.h"
+#include "SG/Interface/SGAnimationInterface.h"
 #include "SGAnimInstance.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SG_API USGAnimInstance : public UAnimInstance, public IGSAnimationInterface
+class SG_API USGAnimInstance : public UAnimInstance, public ISGAnimationInterface
 {
     GENERATED_BODY()
 protected:

@@ -1,7 +1,7 @@
 #include "SGCharacter.h"
 
 #include "Components/CapsuleComponent.h"
-#include "GSInputName.h"
+#include "SGInputName.h"
 #include "SGAnimInstance.h"
 
 #include "Components/TimelineComponent.h"
@@ -14,7 +14,7 @@
 
 #include "Kismet/KismetMathLibrary.h"
 
-#include "SG/BlueprintLibrary/GSBlueprintLibrary.h"
+#include "SG/BlueprintLibrary/SGBlueprintLibrary.h"
 #include "SG/Core/SGName.h"
 #include "SG/DataAsset/TableRowDefine.h"
 #include "SG/Subsystem/ConfigGameSubsystem.h"
@@ -28,6 +28,7 @@ ASGCharacter::ASGCharacter()
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
+    Tags.AddUnique(SGName::GameTag::SGCharacter);
 }
 
 // Called when the game starts or when spawned
@@ -80,7 +81,7 @@ void ASGCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdj
 void ASGCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
     Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
-    if (auto LocalCharacterMovement = GetCharacterMovement())
+    if (const auto LocalCharacterMovement = GetCharacterMovement())
     {
         OnCharacteMovementModeChanged(PrevMovementMode, LocalCharacterMovement->MovementMode, PreviousCustomMode, LocalCharacterMovement->CustomMovementMode);
     }
@@ -110,7 +111,7 @@ void ASGCharacter::Landed(const FHitResult& Hit)
     {
         BreakFallEvent();
     }
-    else if (auto LocalCharacterMovement = GetCharacterMovement())
+    else if (const auto LocalCharacterMovement = GetCharacterMovement())
     {
         if (HasMovementInput)
         {
@@ -124,7 +125,7 @@ void ASGCharacter::Landed(const FHitResult& Hit)
     }
 }
 
-void ASGCharacter::BreakFallEvent()
+void ASGCharacter::BreakFallEvent() const
 {
     if (MainAnimInstance)
     {
@@ -132,7 +133,7 @@ void ASGCharacter::BreakFallEvent()
     }
 }
 
-void ASGCharacter::RollEvent()
+void ASGCharacter::RollEvent() const
 {
     if (MainAnimInstance)
     {
@@ -157,7 +158,7 @@ void ASGCharacter::OnCharacteMovementModeChanged(EMovementMode PrevMovementMode,
 
 void ASGCharacter::OnMovementStateChanged(EMovementState NewMovementState)
 {
-    EMovementState PreviousMovementState = MovementState;
+    const EMovementState PreviousMovementState = MovementState;
     MovementState = NewMovementState;
 
     switch (MovementState)
@@ -205,7 +206,7 @@ void ASGCharacter::OnMovementStateChanged(EMovementState NewMovementState)
 
 void ASGCharacter::OnMovementActionChanged(EMovementAction NewMovementAction)
 {
-    EMovementAction PreviousMovementAction = MovementAction;
+    const EMovementAction PreviousMovementAction = MovementAction;
     MovementAction = NewMovementAction;
     switch (MovementAction)
     {
@@ -314,8 +315,8 @@ void ASGCharacter::SetMovementModel()
 
 void ASGCharacter::UpdateCharacterMovement()
 {
-    EGait AllowedGait = GetAllowedGait();
-    EGait ActualGait = GetActualGait(AllowedGait);
+    const EGait AllowedGait = GetAllowedGait();
+    const EGait ActualGait = GetActualGait(AllowedGait);
     if (ActualGait != Gait)
     {
         SetGait(ActualGait);
@@ -374,7 +375,7 @@ void ASGCharacter::UpdateMovementSetting()
     }
 }
 
-float ASGCharacter::GetMappedSpeed()
+float ASGCharacter::GetMappedSpeed() const
 {
     if (DTRowMovementSetting)
     {
@@ -421,7 +422,7 @@ EGait ASGCharacter::GetAllowedGait()
     }
 }
 
-EGait ASGCharacter::GetActualGait(EGait AllowedGait)
+EGait ASGCharacter::GetActualGait(EGait AllowedGait) const
 {
     float LocalWalkSpeed = 0;
     float LocalRunSpeed = 0;
@@ -451,7 +452,7 @@ EGait ASGCharacter::GetActualGait(EGait AllowedGait)
     }
 }
 
-bool ASGCharacter::CanSprint()
+bool ASGCharacter::CanSprint() const
 {
     if (HasMovementInput)
     {
@@ -588,7 +589,7 @@ bool ASGCharacter::SetActorLocationAndRotation(FVector NewLocation, FRotator New
     return K2_SetActorLocationAndRotation(NewLocation, NewRotation, bSweep, SweepHitResult, bTeleport);
 }
 
-float ASGCharacter::CalculateGroundedRotationRate()
+float ASGCharacter::CalculateGroundedRotationRate() const
 {
     if (DTRowMovementSetting && DTRowMovementSetting->RotationRateCurve)
     {
@@ -598,7 +599,7 @@ float ASGCharacter::CalculateGroundedRotationRate()
     return 0.0f;
 }
 
-bool ASGCharacter::CanUpdateMovingRotation()
+bool ASGCharacter::CanUpdateMovingRotation() const
 {
     return ((IsMoving && HasMovementInput) || (Speed > 150.0f)) && !HasAnyRootMotion();
 }
@@ -706,9 +707,9 @@ void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& Man
     MantleParams.PlayRate = UKismetMathLibrary::MapRangeClamped(MantleHeight, MantleAsset->LowHeight, MantleAsset->HighHeight, MantleAsset->LowPlayRate, MantleAsset->HighPlayRate);
 
     {
-        UGSBlueprintLibrary::ConvertWorldToLocal(MantleLedgeWorldSpace, MantleLedgeLocalSpace);
+        USGBlueprintLibrary::ConvertWorldToLocal(MantleLedgeWorldSpace, MantleLedgeLocalSpace);
         MantleTarget = MantleLedgeWorldSpace.Transform;
-        MantleActualStartOffset = UGSBlueprintLibrary::TransformSubtraction(GetActorTransform(), MantleTarget);
+        MantleActualStartOffset = USGBlueprintLibrary::TransformSubtraction(GetActorTransform(), MantleTarget);
     }
 
     {
@@ -718,7 +719,7 @@ void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& Man
         A.SetLocation(MantleTarget.GetLocation() - SubVector);
         A.SetRotation(MantleTarget.GetRotation());
         A.SetScale3D(FVector::OneVector);
-        MantleAnimatedStartOffset = UGSBlueprintLibrary::TransformSubtraction(A, MantleTarget);
+        MantleAnimatedStartOffset = USGBlueprintLibrary::TransformSubtraction(A, MantleTarget);
     }
     {
         if (auto LocalCharacterMovement = GetCharacterMovement())
@@ -747,7 +748,7 @@ void ASGCharacter::MantleStart(float MantleHeight, FGSComponentAndTransform& Man
     }
 }
 
-void ASGCharacter::MantleEnd()
+void ASGCharacter::MantleEnd() const
 {
     if (auto LocalCharacterMovement = GetCharacterMovement())
     {
@@ -759,7 +760,7 @@ void ASGCharacter::MantleUpdate(float BlendIn)
 {
     //Step 1: Continually update the mantle target from the stored local transform to follow along with moving objects.
     FGSComponentAndTransform MantleLedgeWorldSpace;
-    UGSBlueprintLibrary::ConvertLocalToWorld(MantleLedgeLocalSpace, MantleLedgeWorldSpace);
+    USGBlueprintLibrary::ConvertLocalToWorld(MantleLedgeLocalSpace, MantleLedgeWorldSpace);
     MantleTarget = MantleLedgeWorldSpace.Transform;
 
     float PositionAlpha = 0, XYCorrectionAlpha = 0, ZCorrectionAlpha = 0;
@@ -787,8 +788,8 @@ void ASGCharacter::MantleUpdate(float BlendIn)
     Location.Z = ActualLerp.GetLocation().Z;
     FTransform Result(AnimateLerp.GetRotation(), Location, FVector::OneVector);
 
-    FTransform Temp = UKismetMathLibrary::TLerp(UGSBlueprintLibrary::TransformAddition(MantleTarget, Result), MantleTarget, PositionAlpha);
-    FTransform LerpedTarget = UKismetMathLibrary::TLerp(UGSBlueprintLibrary::TransformAddition(MantleTarget, MantleActualStartOffset), Temp, BlendIn);
+    FTransform Temp = UKismetMathLibrary::TLerp(USGBlueprintLibrary::TransformAddition(MantleTarget, Result), MantleTarget, PositionAlpha);
+    FTransform LerpedTarget = UKismetMathLibrary::TLerp(USGBlueprintLibrary::TransformAddition(MantleTarget, MantleActualStartOffset), Temp, BlendIn);
 
     //Step 4: Set the actors location and rotation to the Lerped Target.
     FHitResult SweepHitResult;
@@ -935,7 +936,7 @@ void ASGCharacter::SetActorLocationDuringRagdoll()
     }
 }
 
-UAnimMontage* ASGCharacter::GetUpAnimation(bool bRagdollFaceUp)
+UAnimMontage* ASGCharacter::GetUpAnimation(bool bRagdollFaceUp) const
 {
     if (DTRowOverlayState)
     {
@@ -954,14 +955,14 @@ UAnimMontage* ASGCharacter::GetUpAnimation(bool bRagdollFaceUp)
     return nullptr;
 }
 
-void ASGCharacter::DrawDebugShapes()
+void ASGCharacter::DrawDebugShapes() const
 {
     if (auto PlayerController = UGameplayStatics::GetPlayerController(this, 0))
     {
     }
 }
 
-EDrawDebugTrace::Type ASGCharacter::GetTraceDebugType(EDrawDebugTrace::Type DebugType)
+EDrawDebugTrace::Type ASGCharacter::GetTraceDebugType(EDrawDebugTrace::Type DebugType) const
 {
     if (IsLocallyControlled())
     {
@@ -1208,29 +1209,29 @@ void ASGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
     if (PlayerInputComponent)
     {
-        PlayerInputComponent->BindAxis(GSInputName::MoveForwardBackward, this, &ASGCharacter::OnMoveForward);
-        PlayerInputComponent->BindAxis(GSInputName::MoveRightLeft, this, &ASGCharacter::OnMoveRight);
-        PlayerInputComponent->BindAxis(GSInputName::LookUpDown, this, &ASGCharacter::OnLookUp);
-        PlayerInputComponent->BindAxis(GSInputName::LookLeftRight, this, &ASGCharacter::OnLookRight);
+        PlayerInputComponent->BindAxis(SGInputName::MoveForwardBackward, this, &ASGCharacter::OnMoveForward);
+        PlayerInputComponent->BindAxis(SGInputName::MoveRightLeft, this, &ASGCharacter::OnMoveRight);
+        PlayerInputComponent->BindAxis(SGInputName::LookUpDown, this, &ASGCharacter::OnLookUp);
+        PlayerInputComponent->BindAxis(SGInputName::LookLeftRight, this, &ASGCharacter::OnLookRight);
 
-        PlayerInputComponent->BindAction(GSInputName::JumpAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnJumpPressed);
-        PlayerInputComponent->BindAction(GSInputName::JumpAction, EInputEvent::IE_Released, this, &ASGCharacter::OnJumpReleased);
-        PlayerInputComponent->BindAction(GSInputName::WalkAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnWalkPressed);
-        PlayerInputComponent->BindAction(GSInputName::SelectRotationMode_1, EInputEvent::IE_Pressed, this, &ASGCharacter::OnSelectRotationMode1Pressed);
-        PlayerInputComponent->BindAction(GSInputName::SelectRotationMode_2, EInputEvent::IE_Pressed, this, &ASGCharacter::OnSelectRotationMode2Pressed);
+        PlayerInputComponent->BindAction(SGInputName::JumpAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnJumpPressed);
+        PlayerInputComponent->BindAction(SGInputName::JumpAction, EInputEvent::IE_Released, this, &ASGCharacter::OnJumpReleased);
+        PlayerInputComponent->BindAction(SGInputName::WalkAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnWalkPressed);
+        PlayerInputComponent->BindAction(SGInputName::SelectRotationMode_1, EInputEvent::IE_Pressed, this, &ASGCharacter::OnSelectRotationMode1Pressed);
+        PlayerInputComponent->BindAction(SGInputName::SelectRotationMode_2, EInputEvent::IE_Pressed, this, &ASGCharacter::OnSelectRotationMode2Pressed);
 
-        PlayerInputComponent->BindAction(GSInputName::AimAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnAimPressed);
-        PlayerInputComponent->BindAction(GSInputName::AimAction, EInputEvent::IE_Released, this, &ASGCharacter::OnAimReleased);
+        PlayerInputComponent->BindAction(SGInputName::AimAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnAimPressed);
+        PlayerInputComponent->BindAction(SGInputName::AimAction, EInputEvent::IE_Released, this, &ASGCharacter::OnAimReleased);
 
-        PlayerInputComponent->BindAction(GSInputName::StanceAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnStancePressed);
+        PlayerInputComponent->BindAction(SGInputName::StanceAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnStancePressed);
 
-        PlayerInputComponent->BindAction(GSInputName::CameraAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnCameraPressed);
-        PlayerInputComponent->BindAction(GSInputName::CameraAction, EInputEvent::IE_Released, this, &ASGCharacter::OnCameraReleased);
+        PlayerInputComponent->BindAction(SGInputName::CameraAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnCameraPressed);
+        PlayerInputComponent->BindAction(SGInputName::CameraAction, EInputEvent::IE_Released, this, &ASGCharacter::OnCameraReleased);
 
-        PlayerInputComponent->BindAction(GSInputName::SprintAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnSprintPressed);
-        PlayerInputComponent->BindAction(GSInputName::SprintAction, EInputEvent::IE_Released, this, &ASGCharacter::OnSprintReleased);
+        PlayerInputComponent->BindAction(SGInputName::SprintAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnSprintPressed);
+        PlayerInputComponent->BindAction(SGInputName::SprintAction, EInputEvent::IE_Released, this, &ASGCharacter::OnSprintReleased);
 
-        PlayerInputComponent->BindAction(GSInputName::RagdollAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnRagdollPressed);
+        PlayerInputComponent->BindAction(SGInputName::RagdollAction, EInputEvent::IE_Pressed, this, &ASGCharacter::OnRagdollPressed);
     }
 }
 
@@ -1305,8 +1306,8 @@ void ASGCharacter::PlayerMovementInput(bool IsForwardAxis)
 
 FVector ASGCharacter::GetPlayerMovementInput()
 {
-    float MoveForward = GetInputAxisValue(GSInputName::MoveForwardBackward);
-    float MoveRight = GetInputAxisValue(GSInputName::LookLeftRight);
+    float MoveForward = GetInputAxisValue(SGInputName::MoveForwardBackward);
+    float MoveRight = GetInputAxisValue(SGInputName::LookLeftRight);
     FVector ForwardVector;
     FVector RightVector;
     GetControlForwardAndRightVector(ForwardVector, RightVector);

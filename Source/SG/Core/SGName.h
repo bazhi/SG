@@ -52,5 +52,10 @@ namespace SGName
     namespace Slot
     {
         SGNAME_DEF_GROUP(GroundedSlot, Grounded Slot);
+    };
+
+    namespace GameTag
+    {
+        SGNAME_DEF(SGCharacter);
     }
 };
