@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "SG/Interface/SGCameraInterface.h"
 
 #include "SGPlayerCameraManager.generated.h"
@@ -26,6 +27,9 @@ protected:
 protected:
     void UpdateCameraBehavior(FVector& OutLocation, FRotator& OutRotation, float& OutFOV);
 
+    FVector CalculateAxisIndependentLag(const FVector& CurrentLocation, const FVector& TargetLocation, const FRotator& CameraRotation, const FVector& LagSpeeds);
+    float GetCurveValue(FName CurveName) const;
+    EDrawDebugTrace::Type GetDebugTraceType(EDrawDebugTrace::Type ShowTraceType);
 private:
     UPROPERTY(Category = Character, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     USkeletalMeshComponent* CameraMesh;

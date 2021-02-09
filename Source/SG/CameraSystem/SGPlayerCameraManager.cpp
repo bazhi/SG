@@ -62,3 +62,26 @@ void ASGPlayerCameraManager::UpdateCameraBehavior(FVector& OutLocation, FRotator
 
 	}
 }
+
+FVector ASGPlayerCameraManager::CalculateAxisIndependentLag(const FVector& CurrentLocation,
+    const FVector& TargetLocation, const FRotator& CameraRotation, const FVector& LagSpeeds)
+{
+	FRotator CameraRotationYaw = FRotator::ZeroRotator;
+	CameraRotationYaw.Yaw = CameraRotation.Yaw;
+
+	return FVector::ZeroVector;
+}
+
+float ASGPlayerCameraManager::GetCurveValue(FName CurveName) const
+{
+	if(auto AnimInstance = CameraMesh->GetAnimInstance())
+	{
+		return AnimInstance->GetCurveValue(CurveName);
+	}
+	return 0.f;
+}
+
+EDrawDebugTrace::Type ASGPlayerCameraManager::GetDebugTraceType(EDrawDebugTrace::Type ShowTraceType)
+{
+	return EDrawDebugTrace::Type::None;
+}
